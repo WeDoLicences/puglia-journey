@@ -1266,6 +1266,14 @@
             apiKey: 'AIzaSyDlray53VkaaYDAaywnQ5tIaGoDntc7SzY',
             enabled: true
         };
+        
+        // Authorized Users - Only these emails can access the app
+        const AUTHORIZED_EMAILS = [
+            'david.cant@quantium.com',  // Add your family emails here
+            'david.cant.84@gmail.com',
+            // 'steve@email.com',
+            // Add more as needed
+        ];
 
         let app, auth, db;
         let currentUser = null;
@@ -1290,6 +1298,13 @@
 
                 auth.onAuthStateChanged(user => {
                     if (user) {
+                        // Check if user email is authorized
+                        if (!AUTHORIZED_EMAILS.includes(user.email)) {
+                            alert(`Access denied. ${user.email} is not authorized.\n\nPlease contact the trip organizer to be added.`);
+                            auth.signOut();
+                            return;
+                        }
+                        
                         currentUser = user;
                         showApp();
                         loadData();
@@ -1535,20 +1550,51 @@
         function renderTripInfo(type, data) {
             const container = document.getElementById(`${type === 'flight' ? 'flight' : type === 'hotel' ? 'hotel' : type === 'car' ? 'car' : 'important'}Details`);
             
-            if (data.length === 0) {
+            // Filter: Only show items created by current user OR explicitly shared
+            const visibleData = data.filter(item => 
+                item.createdBy === currentUser.uid || item.sharedWith === 'everyone'
+            );
+            
+            if (visibleData.length === 0) {
                 container.innerHTML = `<p style="color: #999; font-size: 14px; padding: 20px 0;">No ${type} information added yet</p>`;
                 return;
             }
 
-            container.innerHTML = data.map(item => {
-                const fields = Object.entries(item).filter(([k,v]) => k !== 'id' && k !== 'type' && k !== 'createdAt' && k !== 'createdBy');
-                return fields.map(([key, value]) => `
-                    <div class="hub-detail">
-                        <span class="hub-label">${formatLabel(key)}</span>
-                        <span class="hub-value">${value}</span>
-                    </div>
-                `).join('');
-            }).join('');
+            container.innerHTML = visibleData.map(item => {
+                const isOwner = item.createdBy === currentUser.uid;
+                const isShared = item.sharedWith === 'everyone';
+                const fields = Object.entries(item).filter(([k,v]) => k !== 'id' && k !== 'type' && k !== 'createdAt' && k !== 'createdBy' && k !== 'sharedWith');
+                
+                return `
+                    ${fields.map(([key, value]) => `
+                        <div class="hub-detail">
+                            <span class="hub-label">${formatLabel(key)}</span>
+                            <span class="hub-value">${value}</span>
+                        </div>
+                    `).join('')}
+                    ${isOwner ? `
+                        <div class="hub-detail" style="background: rgba(0,0,0,0.02); margin-top: 12px; padding: 10px;">
+                            <span class="hub-label">Visibility</span>
+                            <button onclick="toggleTripInfoSharing('${item.id}', '${isShared ? 'private' : 'everyone'}')" 
+                                    style="padding: 6px 14px; background: ${isShared ? '#5C6E3C' : '#999'}; color: white; border: none; font-size: 12px; cursor: pointer; border-radius: 4px;">
+                                ${isShared ? '🌍 Shared' : '🔒 Private'}
+                            </button>
+                        </div>
+                    ` : `
+                        <p style="font-size: 12px; color: #888; margin-top: 12px; font-style: italic;">Shared by ${item.createdByName || 'group member'}</p>
+                    `}
+                `;
+            }).join('<div style="border-top: 1px solid rgba(0,0,0,0.08); margin: 16px 0;"></div>');
+        }
+        
+        async function toggleTripInfoSharing(itemId, newStatus) {
+            try {
+                await db.collection('tripInfo').doc(itemId).update({
+                    sharedWith: newStatus
+                });
+            } catch (error) {
+                console.error('Error updating sharing:', error);
+            }
         }
 
         function formatLabel(key) {
@@ -1704,7 +1750,9 @@
             const data = {
                 type: currentInfoType,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid
+                createdBy: currentUser.uid,
+                createdByName: currentUser.displayName,
+                sharedWith: 'private' // Default to private, user can share later
             };
 
             formData.forEach((value, key) => {
