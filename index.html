@@ -672,6 +672,154 @@
             transform: scale(1.1) rotate(90deg);
         }
         
+        /* Chat FAB */
+        .chat-fab {
+            position: fixed;
+            bottom: 40px;
+            right: 130px;
+            width: 60px;
+            height: 60px;
+            background: var(--sea);
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(44,95,141,0.4);
+            transition: all 0.4s ease;
+            z-index: 1001;
+        }
+        
+        .chat-fab:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Chat Panel */
+        .chat-panel {
+            position: fixed;
+            bottom: 120px;
+            right: 40px;
+            width: 400px;
+            height: 550px;
+            background: white;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .chat-panel.active {
+            display: flex;
+            animation: slide-up 0.3s ease;
+        }
+        
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--sea);
+            color: white;
+        }
+        
+        .chat-header h3 {
+            font-family: var(--serif);
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--sand);
+        }
+        
+        .chat-message {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 85%;
+            animation: fade-in 0.3s ease;
+        }
+        
+        .chat-message.user {
+            background: var(--sea);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .chat-message.assistant {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        
+        .chat-message p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .chat-input-container {
+            padding: 16px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            gap: 8px;
+            background: white;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 8px;
+            font-family: var(--sans);
+            font-size: 14px;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--sea);
+        }
+        
+        .chat-send {
+            padding: 10px 20px;
+            background: var(--sea);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--sans);
+            font-size: 14px;
+        }
+        
+        .chat-send:hover {
+            background: var(--charcoal);
+        }
+        
         /* Modal */
         .modal {
             display: none;
@@ -814,6 +962,23 @@
             
             .page-title {
                 font-size: 36px;
+            }
+            
+            .chat-panel {
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .chat-fab {
+                right: 110px;
+                bottom: 30px;
+            }
+            
+            .fab {
+                right: 30px;
+                bottom: 30px;
             }
         }
     </style>
@@ -982,6 +1147,27 @@
 
         <!-- FAB -->
         <button class="fab" onclick="openAddModal()">+</button>
+        
+        <!-- Chat FAB -->
+        <button class="chat-fab" onclick="toggleChat()" id="chatFab">💬</button>
+    </div>
+    
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <h3>Travel Assistant</h3>
+            <button class="chat-close" onclick="toggleChat()">&times;</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message assistant">
+                <p>👋 Hi! I can help you plan your Puglia trip. Ask me anything!</p>
+                <p style="font-size: 13px; color: #888; margin-top: 8px;">Try: "What should we do on our first day in Polignano?"</p>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your trip..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button class="chat-send" onclick="sendChatMessage()">Send</button>
+        </div>
     </div>
 
     <!-- Activity Modal -->
@@ -1072,6 +1258,12 @@
         // Google Places API Config (Optional - for discovering top-rated places)
         const GOOGLE_PLACES_CONFIG = {
             apiKey: 'AIzaSyDDIwAc4x3_D99RqyUtkW9wLMX_c-BAWSo',
+            enabled: true
+        };
+        
+        // Gemini AI Config (Free tier - 60 requests/minute)
+        const GEMINI_CONFIG = {
+            apiKey: 'AIzaSyDlray53VkaaYDAaywnQ5tIaGoDntc7SzY',
             enabled: true
         };
 
@@ -1766,6 +1958,96 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
+        }
+
+        // Chat Functions
+        function toggleChat() {
+            const panel = document.getElementById('chatPanel');
+            panel.classList.toggle('active');
+        }
+        
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            input.value = '';
+            
+            // Check if Gemini is configured
+            if (!GEMINI_CONFIG.enabled || !GEMINI_CONFIG.apiKey) {
+                addMessageToChat(
+                    "⚠️ Gemini AI not configured yet. To enable the travel assistant, get a free API key from https://ai.google.dev and add it to the config (lines 1078-1081).",
+                    'assistant'
+                );
+                return;
+            }
+            
+            // Show typing indicator
+            const typingId = addMessageToChat('Thinking...', 'assistant');
+            
+            try {
+                // Build context from your activities
+                const context = `You are a helpful travel assistant for a family trip to Puglia, Italy in August 2025.
+                
+The group has planned ${activities.length} activities so far.
+Top voted activities: ${activities.sort((a,b) => (b.votes || 0) - (a.votes || 0)).slice(0,5).map(a => a.name).join(', ')}
+
+Answer questions about:
+- Best things to do in specific areas
+- Restaurant recommendations  
+- Family-friendly activities
+- Timing and logistics
+- Booking requirements
+- Local tips and insider knowledge
+
+Keep responses concise (2-3 paragraphs), friendly, and actionable.`;
+
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_CONFIG.apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: `${context}\n\nUser question: ${message}`
+                                }]
+                            }]
+                        })
+                    }
+                );
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                document.getElementById(typingId).remove();
+                
+                if (data.candidates && data.candidates[0].content) {
+                    const reply = data.candidates[0].content.parts[0].text;
+                    addMessageToChat(reply, 'assistant');
+                } else {
+                    addMessageToChat('Sorry, I couldn\'t generate a response. Please try again.', 'assistant');
+                }
+                
+            } catch (error) {
+                console.error('Gemini error:', error);
+                document.getElementById(typingId).remove();
+                addMessageToChat('Error connecting to AI. Check console for details.', 'assistant');
+            }
+        }
+        
+        function addMessageToChat(text, sender) {
+            const messages = document.getElementById('chatMessages');
+            const messageId = 'msg-' + Date.now();
+            const div = document.createElement('div');
+            div.id = messageId;
+            div.className = `chat-message ${sender}`;
+            div.innerHTML = `<p>${text}</p>`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            return messageId;
         }
 
         // Initialize
