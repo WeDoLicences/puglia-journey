@@ -8,9 +8,8 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUHVnbGlhIEpvdXJuZXkiLCJzaG9ydF9uYW1lIjoiUHVnbGlhIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNGRkZERjciLCJ0aGVtZV9jb2xvciI6IiMxRTcwQjgiLCJpY29ucyI6W3sic3JjIjoiL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=">
     
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Maps -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDIwAc4x3_D99RqyUtkW9wLMX_c-BAWSo&libraries=places,marker"></script>
     
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1289,10 +1288,12 @@
         
         // Authorized Users - Only these emails can access the app
         const AUTHORIZED_EMAILS = [
-            'david.cant@quantium.com',  // Add your family emails here
-            'david.cant.84@gmail.com',
+            'david.cant@quantium.com',
+            'david.cant.84@gmail.com',  // Personal Gmail
+            // Add family emails below:
+            // 'spouse@gmail.com',
+            // 'kate@email.com',
             // 'steve@email.com',
-            // Add more as needed
         ];
 
         let app, auth, db;
@@ -1464,6 +1465,7 @@
                                 <span class="vote-count">${a.votes || 0}</span>
                                 <button class="vote-btn" onclick="vote('${a.id}', -1)">👎</button>
                             </div>
+                            ${a.lat && a.lng ? `<button onclick="showOnMap('${a.id}')" style="padding: 8px 16px; background: var(--sea); color: white; border: none; font-size: 13px; cursor: pointer;">📍 Map</button>` : ''}
                         </div>
                         <div class="comments-section">
                             <button class="comments-toggle" onclick="toggleComments('${a.id}')">
@@ -1480,6 +1482,11 @@
                     </div>
                 </div>
             `}).join('');
+            
+            // Update map markers if map is visible
+            if (map) {
+                updateMapMarkers();
+            }
         }
 
         async function loadComments() {
@@ -1869,36 +1876,74 @@
             resultsDiv.innerHTML = '<p style="color: #999; padding: 20px;">Searching for top-rated places...</p>';
             
             try {
-                // Step 1: Geocode the location
-                const geocodeResponse = await fetch(
-                    `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location + ', Puglia, Italy')}&key=${GOOGLE_PLACES_CONFIG.apiKey}`
-                );
-                const geocodeData = await geocodeResponse.json();
+                // Pre-defined Puglia location coordinates (faster, more reliable)
+                const puglia_locations = {
+                    'polignano a mare': { lat: 40.9964, lng: 17.2198 },
+                    'polignano': { lat: 40.9964, lng: 17.2198 },
+                    'ostuni': { lat: 40.7316, lng: 17.5797 },
+                    'alberobello': { lat: 40.7816, lng: 17.2368 },
+                    'lecce': { lat: 40.3515, lng: 18.1750 },
+                    'bari': { lat: 41.1171, lng: 16.8719 },
+                    'monopoli': { lat: 40.9538, lng: 17.3082 },
+                    'locorotondo': { lat: 40.7548, lng: 17.3277 },
+                    'cisternino': { lat: 40.7398, lng: 17.4254 },
+                    'martina franca': { lat: 40.7052, lng: 17.3373 }
+                };
                 
-                if (!geocodeData.results || geocodeData.results.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color: #999;">Location not found. Try "Polignano a Mare" or "Ostuni"</p>';
-                    return;
+                let lat, lng;
+                const locationLower = location.toLowerCase();
+                
+                // Check if it's a known Puglia location
+                if (puglia_locations[locationLower]) {
+                    ({ lat, lng } = puglia_locations[locationLower]);
+                } else {
+                    // Fallback to geocoding with Puglia hint
+                    const geocodeResponse = await fetch(
+                        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&components=country:IT|administrative_area:Puglia&key=${GOOGLE_PLACES_CONFIG.apiKey}`
+                    );
+                    const geocodeData = await geocodeResponse.json();
+                    
+                    if (!geocodeData.results || geocodeData.results.length === 0) {
+                        resultsDiv.innerHTML = `
+                            <p style="color: #999;">Location not found. Try one of these:</p>
+                            <ul style="color: #666; margin-top: 12px; line-height: 2;">
+                                <li>Polignano a Mare</li>
+                                <li>Ostuni</li>
+                                <li>Alberobello</li>
+                                <li>Lecce</li>
+                                <li>Monopoli</li>
+                                <li>Locorotondo</li>
+                            </ul>
+                        `;
+                        return;
+                    }
+                    
+                    ({ lat, lng } = geocodeData.results[0].geometry.location);
                 }
                 
-                const { lat, lng } = geocodeData.results[0].geometry.location;
-                
-                // Step 2: Nearby search
+                // Nearby search with better parameters
                 const placesResponse = await fetch(
-                    `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=${type}&key=${GOOGLE_PLACES_CONFIG.apiKey}`
+                    `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=${type}&rankby=prominence&key=${GOOGLE_PLACES_CONFIG.apiKey}`
                 );
                 const placesData = await placesResponse.json();
                 
                 if (!placesData.results || placesData.results.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color: #999;">No results found. Try a different search.</p>';
+                    resultsDiv.innerHTML = '<p style="color: #999;">No results found. Try a different type or location.</p>';
                     return;
                 }
                 
-                // Step 3: Get details for top results (with photos and reviews)
+                // Get top results (4+ stars only)
                 const topPlaces = placesData.results
-                    .filter(p => p.rating && p.rating >= 4.0) // Only 4+ stars
-                    .sort((a, b) => (b.rating * b.user_ratings_total) - (a.rating * a.user_ratings_total)) // Sort by rating × reviews
-                    .slice(0, 8); // Top 8
+                    .filter(p => p.rating && p.rating >= 4.0)
+                    .sort((a, b) => (b.rating * (b.user_ratings_total || 1)) - (a.rating * (a.user_ratings_total || 1)))
+                    .slice(0, 8);
                 
+                if (topPlaces.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: #999;">No highly-rated results found. Try a different search.</p>';
+                    return;
+                }
+                
+                // Get details for each place
                 const detailsPromises = topPlaces.map(place => 
                     fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,rating,user_ratings_total,price_level,photos,reviews,opening_hours,formatted_phone_number,website,geometry&key=${GOOGLE_PLACES_CONFIG.apiKey}`)
                         .then(r => r.json())
@@ -2059,19 +2104,23 @@
                     <p style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">${item.source}</p>
                     <p style="font-size: 14px; color: #666; margin-bottom: 16px; line-height: 1.6;">${item.description}</p>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick='window.open("${item.url}", "_blank"); event.stopPropagation();' style="flex: 1; padding: 10px; background: var(--charcoal); color: white; border: none; font-size: 13px; cursor: pointer;">Read Article</button>
-                        <button onclick='saveToInspiration(${JSON.stringify(item)}); event.stopPropagation();' style="flex: 1; padding: 10px; background: white; border: 1px solid rgba(0,0,0,0.15); font-size: 13px; cursor: pointer;">Save to Board</button>
+                        <button onclick="openArticle('${item.url}')" style="flex: 1; padding: 10px; background: var(--charcoal); color: white; border: none; font-size: 13px; cursor: pointer;">Read Article</button>
+                        <button onclick="saveToInspiration('${item.url}', '${item.title.replace(/'/g, "\\'")}', '${item.description.replace(/'/g, "\\'")}', '${item.source}')" style="flex: 1; padding: 10px; background: white; border: 1px solid rgba(0,0,0,0.15); font-size: 13px; cursor: pointer;">Save to Board</button>
                     </div>
                 </div>
             `).join('');
         }
         
-        function saveToInspiration(article) {
+        function openArticle(url) {
+            window.open(url, '_blank');
+        }
+        
+        function saveToInspiration(url, title, description, source) {
             const inspiration = {
-                url: article.url,
-                title: article.title,
-                description: article.description,
-                source: article.source,
+                url: url,
+                title: title,
+                description: description,
+                source: source,
                 votes: 0,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 createdBy: currentUser.uid
@@ -2087,11 +2136,101 @@
 
         // Map
         function initMap() {
-            map = L.map('map').setView([40.7816, 17.2368], 9);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
+            // Initialize Google Map centered on Puglia
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 40.7816, lng: 17.2368 },
+                zoom: 9,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+            
+            // Add markers for all activities with coordinates
+            updateMapMarkers();
+        }
+        
+        function updateMapMarkers() {
+            if (!map) return;
+            
+            // Clear existing markers
+            if (window.activityMarkers) {
+                window.activityMarkers.forEach(m => m.setMap(null));
+            }
+            window.activityMarkers = [];
+            
+            // Add marker for each activity
+            activities.forEach(activity => {
+                if (activity.lat && activity.lng) {
+                    const marker = new google.maps.Marker({
+                        position: { lat: activity.lat, lng: activity.lng },
+                        map: map,
+                        title: activity.name,
+                        animation: google.maps.Animation.DROP
+                    });
+                    
+                    // Info window with activity details
+                    const infoContent = `
+                        <div style="font-family: var(--sans); max-width: 250px;">
+                            <h3 style="font-family: var(--serif); font-size: 18px; margin-bottom: 8px;">${activity.name}</h3>
+                            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">${activity.location || ''}</p>
+                            ${activity.rating ? `<p style="font-size: 14px; margin-bottom: 8px;">⭐ ${activity.rating}</p>` : ''}
+                            <p style="font-size: 13px; color: #555; margin-bottom: 12px;">${activity.description?.slice(0, 100) || ''}...</p>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="switchPanel('activities')" style="flex: 1; padding: 8px; background: var(--terracotta); color: white; border: none; font-size: 12px; cursor: pointer;">View Details</button>
+                                <button onclick="addToItinerary('${activity.id}')" style="flex: 1; padding: 8px; background: white; border: 1px solid #ddd; font-size: 12px; cursor: pointer;">Add to Itinerary</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: infoContent
+                    });
+                    
+                    marker.addListener('click', () => {
+                        infoWindow.open(map, marker);
+                    });
+                    
+                    window.activityMarkers.push(marker);
+                }
+            });
+        }
+        
+        function addToItinerary(activityId) {
+            // Placeholder for itinerary functionality
+            alert('📅 Itinerary builder coming soon! For now, just note which activities you want to do.');
+        }
+        
+        function showOnMap(activityId) {
+            const activity = activities.find(a => a.id === activityId);
+            if (!activity || !activity.lat || !activity.lng) return;
+            
+            // Switch to map panel
+            switchPanel('map');
+            
+            // Wait for map to be initialized
+            setTimeout(() => {
+                if (!map) initMap();
+                
+                // Center map on activity
+                map.setCenter({ lat: activity.lat, lng: activity.lng });
+                map.setZoom(15);
+                
+                // Find and trigger the marker's info window
+                if (window.activityMarkers) {
+                    const marker = window.activityMarkers.find((m, idx) => {
+                        const act = activities.filter(a => a.lat && a.lng)[idx];
+                        return act && act.id === activityId;
+                    });
+                    
+                    if (marker) {
+                        google.maps.event.trigger(marker, 'click');
+                    }
+                }
+            }, 300);
         }
 
         // Chat Functions
