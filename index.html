@@ -1079,7 +1079,7 @@ Group has ${activities.length} planned activities. Most popular: ${activities.so
 Be concise (2-3 paragraphs), friendly and practical. Focus on Puglia food, beaches, culture and family activities.`;
 
     try {
-        const res  = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+        const res  = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: ctx + '\n\nUser: ' + msg }] }] })
