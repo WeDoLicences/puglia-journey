@@ -3,2330 +3,1129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puglia • Family Journey</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUHVnbGlhIEpvdXJuZXkiLCJzaG9ydF9uYW1lIjoiUHVnbGlhIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNGRkZERjciLCJ0aGVtZV9jb2xvciI6IiMxRTcwQjgiLCJpY29ucyI6W3sic3JjIjoiL2ljb24ucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=">
-    
-    <!-- Google Maps -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDDIwAc4x3_D99RqyUtkW9wLMX_c-BAWSo&libraries=places,marker"></script>
-    
-    <!-- Firebase -->
+    <title>Puglia Journey</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --stone: #E8DED2;
-            --sea: #2C5F8D;
-            --terracotta: #C35934;
-            --olive: #5C6E3C;
-            --sand: #FAF6F0;
-            --charcoal: #2B2B2B;
-            --warm-white: #FFFEFB;
-            --serif: 'Crimson Pro', serif;
-            --sans: 'Work Sans', sans-serif;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: var(--sans);
-            background: var(--sand);
-            color: var(--charcoal);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        
-        /* Auth Screen */
-        .auth-screen {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--sea) 0%, #1a3a52 100%);
-            position: relative;
-        }
-        
-        .auth-screen::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url('https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1920&q=80') center/cover;
-            opacity: 0.2;
-            animation: slow-pan 30s ease-in-out infinite alternate;
-        }
-        
-        @keyframes slow-pan {
-            from { transform: scale(1) translateX(0); }
-            to { transform: scale(1.1) translateX(-20px); }
-        }
-        
-        .auth-card {
-            background: rgba(255,254,251,0.95);
-            backdrop-filter: blur(20px);
-            padding: 60px;
-            border-radius: 2px;
-            max-width: 460px;
-            width: 90%;
-            position: relative;
-            z-index: 1;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        
-        .auth-card h1 {
-            font-family: var(--serif);
-            font-size: 52px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -1px;
-        }
-        
-        .auth-card p {
-            color: #666;
-            margin-bottom: 40px;
-            font-size: 17px;
-            font-weight: 300;
-        }
-        
-        .google-btn {
-            width: 100%;
-            padding: 18px;
-            background: var(--charcoal);
-            color: white;
-            border: none;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            font-family: var(--sans);
-            letter-spacing: 0.5px;
-        }
-        
-        .google-btn:hover {
-            background: var(--sea);
-        }
-        
-        /* Main App */
-        .app {
-            display: none;
-        }
-        
-        .app.active {
-            display: block;
-        }
-        
-        /* Masthead */
-        .masthead {
-            background: var(--warm-white);
-            border-bottom: 1px solid rgba(0,0,0,0.08);
-            padding: 24px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            background: rgba(255,254,251,0.98);
-        }
-        
-        .masthead-inner {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .masthead h1 {
-            font-family: var(--serif);
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-        
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .user-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 2px solid var(--stone);
-        }
-        
-        .sign-out {
-            background: none;
-            border: 1px solid rgba(0,0,0,0.15);
-            padding: 8px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            font-family: var(--sans);
-            transition: all 0.3s ease;
-        }
-        
-        .sign-out:hover {
-            border-color: var(--charcoal);
-        }
-        
-        /* Sidebar Nav */
-        .nav-sidebar {
-            position: fixed;
-            left: 0;
-            top: 96px;
-            width: 220px;
-            height: calc(100vh - 96px);
-            background: var(--warm-white);
-            border-right: 1px solid rgba(0,0,0,0.08);
-            padding: 48px 16px;
-            overflow-y: auto;
-            z-index: 100;
-        }
-        
-        .nav-item {
-            display: block;
-            padding: 14px 16px;
-            margin-bottom: 4px;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-family: var(--sans);
-            font-size: 15px;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-        
-        .nav-item:hover {
-            color: var(--charcoal);
-            background: rgba(0,0,0,0.02);
-        }
-        
-        .nav-item.active {
-            color: var(--charcoal);
-            font-weight: 600;
-            border-left-color: var(--terracotta);
-            background: rgba(199,89,52,0.05);
-        }
-        
-        /* Main Content */
-        .main-content {
-            margin-left: 220px;
-            min-height: 100vh;
-            padding: 80px 48px;
-            max-width: calc(1400px - 220px);
-        }
-        
-        .panel {
-            display: none;
-        }
-        
-        .panel.active {
-            display: block;
-        }
-        
-        .page-title {
-            font-family: var(--serif);
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -1px;
-        }
-        
-        .page-subtitle {
-            color: #666;
-            font-size: 17px;
-            margin-bottom: 48px;
-        }
-        
-        /* Category Filters */
-        .category-filters {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-        }
-        
-        .category-btn {
-            padding: 10px 20px;
-            border: 1px solid rgba(0,0,0,0.15);
-            background: white;
-            cursor: pointer;
-            font-family: var(--sans);
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .category-btn:hover {
-            border-color: var(--terracotta);
-        }
-        
-        .category-btn.active {
-            background: var(--terracotta);
-            color: white;
-            border-color: var(--terracotta);
-        }
-        
-        /* Trip Hub */
-        .hub-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-            margin-bottom: 80px;
-        }
-        
-        .hub-card {
-            background: white;
-            padding: 24px;
-            border: 1px solid rgba(0,0,0,0.08);
-            position: relative;
-        }
-        
-        .hub-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--terracotta);
-        }
-        
-        .hub-card h3 {
-            font-family: var(--serif);
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        
-        .hub-detail {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            font-size: 14px;
-        }
-        
-        .hub-detail:last-child {
-            border-bottom: none;
-        }
-        
-        .hub-label {
-            font-weight: 500;
-            color: #666;
-        }
-        
-        .hub-value {
-            color: var(--charcoal);
-            font-weight: 500;
-        }
-        
-        .payment-status {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(0,0,0,0.08);
-        }
-        
-        .payment-label {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .payment-options {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .payment-btn {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid rgba(0,0,0,0.15);
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--sans);
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .payment-btn:hover {
-            border-color: var(--charcoal);
-        }
-        
-        .payment-btn.active {
-            border-color: transparent;
-            color: white;
-        }
-        
-        .payment-btn.active.paid {
-            background: var(--olive);
-        }
-        
-        .payment-btn.active.partial {
-            background: #D97706;
-        }
-        
-        .payment-btn.active.unpaid {
-            background: #6B7280;
-        }
-        
-        .add-info-btn {
-            width: 100%;
-            padding: 12px;
-            margin-top: 16px;
-            background: var(--stone);
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: var(--sans);
-            transition: all 0.3s ease;
-        }
-        
-        .add-info-btn:hover {
-            background: var(--terracotta);
-            color: white;
-        }
-        
-        /* Activities - Masonry */
-        .activity-masonry {
-            columns: 2;
-            column-gap: 24px;
-        }
-        
-        .activity-item {
-            break-inside: avoid;
-            margin-bottom: 24px;
-            background: white;
-            border: 1px solid rgba(0,0,0,0.08);
-            overflow: hidden;
-            transition: all 0.4s ease;
-        }
-        
-        .activity-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-        }
-        
-        .activity-emoji {
-            width: 100%;
-            height: 140px;
-            background: linear-gradient(135deg, var(--stone) 0%, var(--sand) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 64px;
-        }
-        
-        .activity-body {
-            padding: 24px;
-        }
-        
-        .activity-title {
-            font-family: var(--serif);
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1.2;
-            letter-spacing: -0.5px;
-        }
-        
-        .activity-location {
-            font-size: 13px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
-        }
-        
-        .activity-desc {
-            font-size: 15px;
-            line-height: 1.7;
-            color: #555;
-            margin-bottom: 24px;
-        }
-        
-        .activity-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 16px;
-            border-top: 1px solid rgba(0,0,0,0.06);
-            margin-bottom: 16px;
-        }
-        
-        .vote-controls {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        
-        .vote-btn {
-            width: 36px;
-            height: 36px;
-            border: 1px solid rgba(0,0,0,0.15);
-            background: white;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .vote-btn:hover {
-            border-color: var(--terracotta);
-            background: rgba(199,89,52,0.05);
-        }
-        
-        .vote-count {
-            font-weight: 600;
-            font-size: 18px;
-            min-width: 30px;
-            text-align: center;
-        }
-        
-        /* Comments Section */
-        .comments-section {
-            border-top: 1px solid rgba(0,0,0,0.06);
-            padding-top: 16px;
-        }
-        
-        .comments-toggle {
-            background: none;
-            border: none;
-            color: #666;
-            font-size: 14px;
-            cursor: pointer;
-            font-family: var(--sans);
-            padding: 8px 0;
-        }
-        
-        .comments-toggle:hover {
-            color: var(--charcoal);
-        }
-        
-        .comments-list {
-            margin-top: 12px;
-            display: none;
-        }
-        
-        .comments-list.active {
-            display: block;
-        }
-        
-        .comment {
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.04);
-            font-size: 14px;
-        }
-        
-        .comment-author {
-            font-weight: 600;
-            color: var(--charcoal);
-            margin-bottom: 4px;
-        }
-        
-        .comment-text {
-            color: #555;
-            line-height: 1.6;
-        }
-        
-        .comment-form {
-            margin-top: 12px;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .comment-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid rgba(0,0,0,0.15);
-            font-family: var(--sans);
-            font-size: 14px;
-        }
-        
-        .comment-submit {
-            padding: 8px 16px;
-            background: var(--terracotta);
-            color: white;
-            border: none;
-            font-size: 14px;
-            cursor: pointer;
-            font-family: var(--sans);
-        }
-        
-        /* Inspiration Board - Pinterest Style */
-        .inspiration-grid {
-            columns: 3;
-            column-gap: 24px;
-        }
-        
-        .inspiration-card {
-            break-inside: avoid;
-            margin-bottom: 24px;
-            background: white;
-            border: 1px solid rgba(0,0,0,0.08);
-            overflow: hidden;
-            transition: all 0.4s ease;
-            cursor: pointer;
-        }
-        
-        .inspiration-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-        }
-        
-        .inspiration-body {
-            padding: 20px;
-        }
-        
-        .inspiration-title {
-            font-family: var(--serif);
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            line-height: 1.3;
-        }
-        
-        .inspiration-source {
-            font-size: 12px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-        }
-        
-        .inspiration-desc {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #666;
-            margin-bottom: 16px;
-        }
-        
-        .inspiration-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 12px;
-            border-top: 1px solid rgba(0,0,0,0.06);
-        }
-        
-        .inspiration-votes {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .inspiration-vote-btn {
-            width: 28px;
-            height: 28px;
-            border: 1px solid rgba(0,0,0,0.15);
-            background: white;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* FAB */
-        .fab {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            width: 70px;
-            height: 70px;
-            background: var(--terracotta);
-            border: none;
-            border-radius: 50%;
-            font-size: 32px;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(199,89,52,0.4);
-            transition: all 0.4s ease;
-            z-index: 1001;
-        }
-        
-        .fab:hover {
-            transform: scale(1.1) rotate(90deg);
-        }
-        
-        /* Chat FAB */
-        .chat-fab {
-            position: fixed;
-            bottom: 40px;
-            right: 130px;
-            width: 60px;
-            height: 60px;
-            background: var(--sea);
-            border: none;
-            border-radius: 50%;
-            font-size: 28px;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(44,95,141,0.4);
-            transition: all 0.4s ease;
-            z-index: 1001;
-        }
-        
-        .chat-fab:hover {
-            transform: scale(1.1);
-        }
-        
-        /* Chat Panel */
-        .chat-panel {
-            position: fixed;
-            bottom: 120px;
-            right: 40px;
-            width: 400px;
-            height: 550px;
-            background: white;
-            border: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            z-index: 2000;
-            display: none;
-            flex-direction: column;
-        }
-        
-        .chat-panel.active {
-            display: flex;
-            animation: slide-up 0.3s ease;
-        }
-        
-        @keyframes slide-up {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--sea);
-            color: white;
-        }
-        
-        .chat-header h3 {
-            font-family: var(--serif);
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .chat-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            line-height: 1;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: var(--sand);
-        }
-        
-        .chat-message {
-            margin-bottom: 16px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            max-width: 85%;
-            animation: fade-in 0.3s ease;
-        }
-        
-        .chat-message.user {
-            background: var(--sea);
-            color: white;
-            margin-left: auto;
-        }
-        
-        .chat-message.assistant {
-            background: white;
-            border: 1px solid rgba(0,0,0,0.08);
-        }
-        
-        .chat-message p {
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        .chat-input-container {
-            padding: 16px;
-            border-top: 1px solid rgba(0,0,0,0.08);
-            display: flex;
-            gap: 8px;
-            background: white;
-        }
-        
-        .chat-input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid rgba(0,0,0,0.15);
-            border-radius: 8px;
-            font-family: var(--sans);
-            font-size: 14px;
-        }
-        
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--sea);
-        }
-        
-        .chat-send {
-            padding: 10px 20px;
-            background: var(--sea);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--sans);
-            font-size: 14px;
-        }
-        
-        .chat-send:hover {
-            background: var(--charcoal);
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(6px);
-            z-index: 2000;
-            overflow-y: auto;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            max-width: 700px;
-            width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
-            padding: 48px;
-            position: relative;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
-        }
-        
-        .modal-title {
-            font-family: var(--serif);
-            font-size: 36px;
-            font-weight: 700;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 32px;
-            cursor: pointer;
-            color: #999;
-            line-height: 1;
-        }
-        
-        .close-btn:hover {
-            color: var(--charcoal);
-        }
-        
-        /* Form */
-        .form-group {
-            margin-bottom: 24px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #666;
-        }
-        
-        .form-input,
-        .form-textarea,
-        .form-select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid rgba(0,0,0,0.15);
-            font-family: var(--sans);
-            font-size: 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-input:focus,
-        .form-textarea:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--terracotta);
-        }
-        
-        .form-textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 18px;
-            background: var(--charcoal);
-            color: white;
-            border: none;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--sans);
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-        }
-        
-        .submit-btn:hover {
-            background: var(--terracotta);
-        }
-        
-        /* Map */
-        #map {
-            width: 100%;
-            height: 70vh;
-            border: 1px solid rgba(0,0,0,0.08);
-        }
-        
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .nav-sidebar {
-                transform: translateX(-220px);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                max-width: 100%;
-            }
-            
-            .activity-masonry,
-            .inspiration-grid {
-                columns: 1;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .masthead h1 {
-                font-size: 24px;
-            }
-            
-            .page-title {
-                font-size: 36px;
-            }
-            
-            .chat-panel {
-                right: 0;
-                bottom: 0;
-                width: 100%;
-                height: 100%;
-            }
-            
-            .chat-fab {
-                right: 110px;
-                bottom: 30px;
-            }
-            
-            .fab {
-                right: 30px;
-                bottom: 30px;
-            }
+            --stone:#E8DED2; --sea:#2C5F8D; --terracotta:#C35934; --olive:#5C6E3C;
+            --sand:#FAF6F0; --charcoal:#2B2B2B; --warm-white:#FFFEFB;
+            --serif:'Crimson Pro',serif; --sans:'Work Sans',sans-serif;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:var(--sans);background:var(--sand);color:var(--charcoal);}
+
+        /* AUTH */
+        .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2C5F8D,#1a3a52);position:relative;}
+        .auth-screen::before{content:'';position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1920&q=80') center/cover;opacity:.2;}
+        .auth-card{background:rgba(255,254,251,.96);padding:60px;max-width:460px;width:90%;position:relative;z-index:1;}
+        .auth-card h1{font-family:var(--serif);font-size:52px;margin-bottom:12px;}
+        .auth-card p{color:#666;margin-bottom:40px;font-size:17px;}
+        .auth-btn{width:100%;padding:18px;background:var(--charcoal);color:white;border:none;font-size:15px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .3s;}
+        .auth-btn:hover{background:var(--sea);}
+
+        /* SHELL */
+        .app{display:none;}
+        .app.active{display:block;}
+        .masthead{background:var(--warm-white);border-bottom:1px solid rgba(0,0,0,.08);padding:20px 24px;position:sticky;top:0;z-index:500;}
+        .masthead-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;}
+        .masthead h1{font-family:var(--serif);font-size:28px;}
+        .user-pill{display:flex;align-items:center;gap:12px;}
+        .user-avatar{width:38px;height:38px;border-radius:50%;border:2px solid var(--stone);}
+        .sign-out-btn{background:none;border:1px solid rgba(0,0,0,.15);padding:7px 18px;font-size:13px;cursor:pointer;font-family:var(--sans);}
+        .nav-sidebar{position:fixed;left:0;top:89px;width:200px;height:calc(100vh - 89px);background:var(--warm-white);border-right:1px solid rgba(0,0,0,.08);padding:40px 14px;z-index:100;overflow-y:auto;}
+        .nav-item{display:block;width:100%;padding:13px 16px;margin-bottom:3px;border:none;background:none;text-align:left;font-family:var(--sans);font-size:14px;color:#666;cursor:pointer;border-left:3px solid transparent;transition:all .2s;}
+        .nav-item:hover{color:var(--charcoal);background:rgba(0,0,0,.02);}
+        .nav-item.active{color:var(--charcoal);font-weight:600;border-left-color:var(--terracotta);background:rgba(199,89,52,.05);}
+        .main{margin-left:200px;padding:60px 48px 120px;}
+        .panel{display:none;}
+        .panel.active{display:block;animation:fadeIn .3s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .page-title{font-family:var(--serif);font-size:44px;font-weight:700;margin-bottom:8px;}
+        .page-sub{color:#666;font-size:16px;margin-bottom:40px;}
+
+        /* HUB */
+        .hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+        .hub-card{background:white;border:1px solid rgba(0,0,0,.08);padding:28px;position:relative;}
+        .hub-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--terracotta);}
+        .hub-card h3{font-family:var(--serif);font-size:22px;margin-bottom:16px;}
+        .hub-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:14px;}
+        .hub-row:last-of-type{border-bottom:none;}
+        .hub-label{color:#666;font-weight:500;}
+        .hub-value{font-weight:500;text-align:right;max-width:60%;}
+        .payment-section{margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,.08);}
+        .payment-label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;}
+        .payment-btns{display:flex;gap:6px;}
+        .pay-btn{flex:1;padding:9px 4px;border:1px solid rgba(0,0,0,.15);background:white;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;text-transform:uppercase;letter-spacing:.3px;}
+        .pay-btn.active-unpaid{background:#6B7280;color:white;border-color:#6B7280;}
+        .pay-btn.active-partial{background:#D97706;color:white;border-color:#D97706;}
+        .pay-btn.active-paid{background:var(--olive);color:white;border-color:var(--olive);}
+        .privacy-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06);}
+        .privacy-btn{padding:6px 14px;font-size:12px;cursor:pointer;border:1px solid rgba(0,0,0,.15);background:white;font-family:var(--sans);font-weight:500;transition:all .2s;}
+        .privacy-btn.shared{background:var(--olive);color:white;border-color:var(--olive);}
+        .hub-add-btn{width:100%;padding:11px;margin-top:14px;background:var(--stone);border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+        .hub-add-btn:hover{background:var(--terracotta);color:white;}
+
+        /* DISCOVER */
+        .quick-btns{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:32px;}
+        .quick-btn{padding:11px 18px;background:white;border:1px solid rgba(0,0,0,.15);cursor:pointer;font-size:13px;font-family:var(--sans);transition:all .2s;}
+        .quick-btn:hover{border-color:var(--terracotta);}
+        .search-box{background:white;padding:28px;border:1px solid rgba(0,0,0,.08);margin-bottom:40px;}
+        .search-box h3{font-family:var(--serif);font-size:22px;margin-bottom:16px;}
+        .search-row{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:12px;}
+        .search-input,.search-select{padding:12px 16px;border:1px solid rgba(0,0,0,.15);font-family:var(--sans);font-size:14px;}
+        .search-btn{padding:12px 28px;background:var(--charcoal);color:white;border:none;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:background .2s;}
+        .search-btn:hover{background:var(--terracotta);}
+        .search-hint{font-size:13px;color:#888;}
+        .place-card{background:white;border:1px solid rgba(0,0,0,.08);margin-bottom:20px;overflow:hidden;}
+        .place-photo{width:100%;height:220px;object-fit:cover;display:block;}
+        .place-body{padding:22px;}
+        .place-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+        .place-name{font-family:var(--serif);font-size:22px;margin-bottom:4px;}
+        .place-addr{font-size:13px;color:#888;}
+        .rating-badge{background:var(--olive);color:white;padding:7px 13px;border-radius:6px;font-weight:700;font-size:15px;white-space:nowrap;}
+        .review-snippet{background:var(--sand);padding:14px;border-left:3px solid var(--terracotta);margin:14px 0;font-size:14px;line-height:1.6;color:#555;}
+        .review-author{font-size:12px;color:#888;margin-top:6px;}
+        .place-btns{display:flex;gap:8px;margin-top:14px;}
+        .place-add-btn{flex:1;padding:11px;background:var(--terracotta);color:white;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+        .place-add-btn:hover{background:#a04529;}
+        .place-web-btn{padding:11px 18px;background:white;border:1px solid rgba(0,0,0,.15);font-size:14px;cursor:pointer;font-family:var(--sans);}
+        .curated-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:8px;}
+        .article-card{background:white;border:1px solid rgba(0,0,0,.08);padding:22px;transition:transform .3s,box-shadow .3s;}
+        .article-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.1);}
+        .article-title{font-family:var(--serif);font-size:19px;margin-bottom:6px;line-height:1.3;}
+        .article-source{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+        .article-desc{font-size:14px;color:#666;line-height:1.6;margin-bottom:14px;}
+        .article-btns{display:flex;gap:8px;}
+        .article-read{flex:1;padding:9px;background:var(--charcoal);color:white;border:none;font-size:13px;cursor:pointer;font-family:var(--sans);}
+        .article-save{flex:1;padding:9px;background:white;border:1px solid rgba(0,0,0,.15);font-size:13px;cursor:pointer;font-family:var(--sans);}
+
+        /* ACTIVITIES */
+        .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+        .filter-btn{padding:9px 18px;border:1px solid rgba(0,0,0,.15);background:white;cursor:pointer;font-size:13px;font-family:var(--sans);transition:all .2s;}
+        .filter-btn.active{background:var(--terracotta);color:white;border-color:var(--terracotta);}
+        .activity-grid{columns:2;column-gap:20px;}
+        .act-card{break-inside:avoid;margin-bottom:20px;background:white;border:1px solid rgba(0,0,0,.08);overflow:hidden;transition:transform .3s,box-shadow .3s;}
+        .act-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.1);}
+        .act-emoji{width:100%;height:110px;display:flex;align-items:center;justify-content:center;font-size:52px;background:linear-gradient(135deg,var(--stone),var(--sand));}
+        .act-body{padding:20px;}
+        .act-title{font-family:var(--serif);font-size:22px;font-weight:700;margin-bottom:4px;line-height:1.2;}
+        .act-location{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+        .act-desc{font-size:14px;line-height:1.7;color:#555;margin-bottom:14px;}
+        .act-meta{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid rgba(0,0,0,.06);}
+        .vote-row{display:flex;align-items:center;gap:10px;}
+        .vote-btn{width:34px;height:34px;border:1px solid rgba(0,0,0,.15);background:white;cursor:pointer;font-size:15px;transition:all .2s;}
+        .vote-btn:hover{border-color:var(--terracotta);}
+        .vote-count{font-weight:700;font-size:17px;min-width:24px;text-align:center;}
+        .map-btn{padding:7px 14px;background:var(--sea);color:white;border:none;font-size:12px;cursor:pointer;font-family:var(--sans);}
+        .comments-toggle{background:none;border:none;color:#666;font-size:13px;cursor:pointer;font-family:var(--sans);margin-top:12px;display:block;}
+        .comments-toggle:hover{color:var(--charcoal);}
+        .comments-area{display:none;margin-top:12px;}
+        .comment-item{padding:10px 0;border-bottom:1px solid rgba(0,0,0,.04);font-size:13px;}
+        .comment-author{font-weight:600;margin-bottom:2px;font-size:12px;color:#888;}
+        .comment-form{display:flex;gap:8px;margin-top:10px;}
+        .comment-input{flex:1;padding:8px 12px;border:1px solid rgba(0,0,0,.15);font-family:var(--sans);font-size:13px;}
+        .comment-post{padding:8px 16px;background:var(--terracotta);color:white;border:none;cursor:pointer;font-family:var(--sans);font-size:13px;}
+        .added-by{font-size:11px;color:#bbb;margin-top:8px;}
+
+        /* MAP */
+        #map{width:100%;height:72vh;border:1px solid rgba(0,0,0,.08);}
+
+        /* INSPIRATION */
+        .insp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+        .insp-card{background:white;border:1px solid rgba(0,0,0,.08);padding:20px;cursor:pointer;transition:transform .3s,box-shadow .3s;}
+        .insp-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.1);}
+        .insp-title{font-family:var(--serif);font-size:18px;margin-bottom:4px;line-height:1.3;}
+        .insp-source{font-size:12px;color:var(--terracotta);font-weight:600;text-transform:uppercase;margin-bottom:8px;}
+        .insp-desc{font-size:13px;color:#666;line-height:1.6;margin-bottom:12px;}
+        .insp-votes{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06);}
+        .insp-vote-btn{width:28px;height:28px;border:1px solid rgba(0,0,0,.15);background:white;cursor:pointer;font-size:13px;}
+
+        /* FABs */
+        .fab{position:fixed;bottom:36px;right:36px;width:64px;height:64px;border-radius:50%;background:var(--terracotta);border:none;font-size:30px;color:white;cursor:pointer;box-shadow:0 6px 20px rgba(199,89,52,.45);z-index:900;transition:transform .3s;}
+        .fab:hover{transform:scale(1.1) rotate(90deg);}
+        .chat-fab{position:fixed;bottom:36px;right:116px;width:56px;height:56px;border-radius:50%;background:var(--sea);border:none;font-size:24px;color:white;cursor:pointer;box-shadow:0 6px 20px rgba(44,95,141,.4);z-index:900;transition:transform .3s;}
+        .chat-fab:hover{transform:scale(1.1);}
+
+        /* MODALS */
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:2000;align-items:center;justify-content:center;overflow-y:auto;}
+        .modal.open{display:flex;}
+        .modal-box{background:white;max-width:640px;width:92%;max-height:90vh;overflow-y:auto;padding:44px;position:relative;animation:scaleIn .3s ease;}
+        @keyframes scaleIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+        .modal-title{font-family:var(--serif);font-size:32px;font-weight:700;margin-bottom:28px;}
+        .modal-close{position:absolute;top:20px;right:24px;background:none;border:none;font-size:28px;cursor:pointer;color:#999;}
+        .form-group{margin-bottom:20px;}
+        .form-label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#666;font-weight:500;margin-bottom:7px;}
+        .form-input,.form-textarea,.form-select{width:100%;padding:12px 14px;border:1px solid rgba(0,0,0,.15);font-family:var(--sans);font-size:14px;transition:border-color .2s;}
+        .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:var(--terracotta);}
+        .form-textarea{min-height:90px;resize:vertical;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        .submit-btn{width:100%;padding:16px;background:var(--charcoal);color:white;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .2s;margin-top:4px;}
+        .submit-btn:hover{background:var(--terracotta);}
+
+        /* CHAT */
+        .chat-panel{display:none;position:fixed;bottom:108px;right:36px;width:380px;height:520px;background:white;border:1px solid rgba(0,0,0,.1);box-shadow:0 16px 48px rgba(0,0,0,.18);z-index:1500;flex-direction:column;}
+        .chat-panel.open{display:flex;animation:slideUp .3s ease;}
+        @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .chat-head{background:var(--sea);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
+        .chat-head h3{font-family:var(--serif);font-size:18px;}
+        .chat-head-close{background:none;border:none;color:white;font-size:22px;cursor:pointer;}
+        .chat-msgs{flex:1;overflow-y:auto;padding:16px;background:var(--sand);}
+        .chat-msg{margin-bottom:12px;max-width:88%;}
+        .chat-msg.user{margin-left:auto;}
+        .chat-bubble{padding:10px 14px;font-size:13px;line-height:1.6;}
+        .chat-msg.ai .chat-bubble{background:white;border:1px solid rgba(0,0,0,.08);}
+        .chat-msg.user .chat-bubble{background:var(--sea);color:white;}
+        .chat-bottom{padding:12px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:8px;}
+        .chat-input-field{flex:1;padding:9px 12px;border:1px solid rgba(0,0,0,.15);font-family:var(--sans);font-size:13px;}
+        .chat-send{padding:9px 18px;background:var(--sea);color:white;border:none;cursor:pointer;font-family:var(--sans);font-size:13px;}
+
+        /* UTILS */
+        .empty-state{text-align:center;padding:80px 20px;color:#aaa;font-size:15px;}
+        .loading-msg{text-align:center;padding:40px;color:#aaa;font-size:15px;}
+        .error-box{background:rgba(199,89,52,.08);border:1px solid var(--terracotta);padding:18px;font-size:14px;line-height:1.6;}
+
+        @media(max-width:1024px){
+            .nav-sidebar{transform:translateX(-200px);}
+            .main{margin-left:0;padding:40px 20px 100px;}
+            .activity-grid{columns:1;}
+            .search-row{grid-template-columns:1fr;}
+            .chat-panel{right:0;bottom:0;width:100%;height:100%;}
+        }
+        @media(max-width:768px){
+            .page-title{font-size:34px;}
+            .hub-grid{grid-template-columns:1fr;}
+            .form-row{grid-template-columns:1fr;}
         }
     </style>
 </head>
 <body>
-    <!-- Auth Screen -->
-    <div class="auth-screen" id="authScreen">
-        <div class="auth-card">
-            <h1>Puglia</h1>
-            <p>Our family journey through southern Italy</p>
-            <button class="google-btn" onclick="signInWithGoogle()">Sign in with Google</button>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+        <h1>Puglia</h1>
+        <p>Our family journey through southern Italy 🇮🇹</p>
+        <button class="auth-btn" onclick="signInWithGoogle()">Continue with Google</button>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="app">
+
+    <div class="masthead">
+        <div class="masthead-inner">
+            <h1>Puglia · August 2025</h1>
+            <div class="user-pill">
+                <img class="user-avatar" id="userAvatar" src="" alt="">
+                <span id="userName" style="font-size:14px;font-weight:500;"></span>
+                <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+            </div>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div class="app" id="app">
-        <!-- Masthead -->
-        <div class="masthead">
-            <div class="masthead-inner">
-                <h1>Puglia • August 2025</h1>
-                <div class="user-section">
-                    <img class="user-avatar" id="userAvatar" src="" alt="">
-                    <button class="sign-out" onclick="signOut()">Sign Out</button>
+    <nav class="nav-sidebar">
+        <button class="nav-item active" onclick="showPanel('hub',this)">🏠 Trip Hub</button>
+        <button class="nav-item" onclick="showPanel('discover',this)">🔍 Discover</button>
+        <button class="nav-item" onclick="showPanel('activities',this)">🎯 Activities</button>
+        <button class="nav-item" onclick="showPanel('inspiration',this)">💡 Inspiration</button>
+        <button class="nav-item" onclick="showPanel('map',this)">🗺 Map</button>
+    </nav>
+
+    <main class="main">
+
+        <!-- TRIP HUB -->
+        <div class="panel active" id="panel-hub">
+            <h2 class="page-title">Trip Hub</h2>
+            <p class="page-sub">Your travel info — private by default, share when you're ready</p>
+            <div class="hub-grid">
+                <div class="hub-card">
+                    <h3>✈️ Flights</h3>
+                    <div id="hub-flight-data"><p style="color:#999;font-size:14px;padding:12px 0">No flights added yet</p></div>
+                    <div class="payment-section">
+                        <div class="payment-label">Payment Status</div>
+                        <div class="payment-btns" id="pay-flight">
+                            <button class="pay-btn" onclick="setPayment('flight','unpaid',this)">Not Paid</button>
+                            <button class="pay-btn" onclick="setPayment('flight','partial',this)">Partial</button>
+                            <button class="pay-btn" onclick="setPayment('flight','paid',this)">Paid ✓</button>
+                        </div>
+                    </div>
+                    <button class="hub-add-btn" onclick="openHubModal('flight')">+ Add Flight</button>
+                </div>
+                <div class="hub-card">
+                    <h3>🏠 Accommodation</h3>
+                    <div id="hub-hotel-data"><p style="color:#999;font-size:14px;padding:12px 0">No accommodation added yet</p></div>
+                    <div class="payment-section">
+                        <div class="payment-label">Payment Status</div>
+                        <div class="payment-btns" id="pay-hotel">
+                            <button class="pay-btn" onclick="setPayment('hotel','unpaid',this)">Not Paid</button>
+                            <button class="pay-btn" onclick="setPayment('hotel','partial',this)">Partial</button>
+                            <button class="pay-btn" onclick="setPayment('hotel','paid',this)">Paid ✓</button>
+                        </div>
+                    </div>
+                    <button class="hub-add-btn" onclick="openHubModal('hotel')">+ Add Hotel</button>
+                </div>
+                <div class="hub-card">
+                    <h3>🚗 Car Hire</h3>
+                    <div id="hub-car-data"><p style="color:#999;font-size:14px;padding:12px 0">No car hire added yet</p></div>
+                    <div class="payment-section">
+                        <div class="payment-label">Payment Status</div>
+                        <div class="payment-btns" id="pay-car">
+                            <button class="pay-btn" onclick="setPayment('car','unpaid',this)">Not Paid</button>
+                            <button class="pay-btn" onclick="setPayment('car','partial',this)">Partial</button>
+                            <button class="pay-btn" onclick="setPayment('car','paid',this)">Paid ✓</button>
+                        </div>
+                    </div>
+                    <button class="hub-add-btn" onclick="openHubModal('car')">+ Add Car</button>
+                </div>
+                <div class="hub-card">
+                    <h3>📋 Important Info</h3>
+                    <div id="hub-info-data"><p style="color:#999;font-size:14px;padding:12px 0">No info added yet</p></div>
+                    <button class="hub-add-btn" onclick="openHubModal('info')">+ Add Info</button>
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar Nav -->
-        <nav class="nav-sidebar">
-            <button class="nav-item active" data-panel="hub" onclick="switchPanel('hub')">Trip Hub</button>
-            <button class="nav-item" data-panel="discover" onclick="switchPanel('discover')">Discover</button>
-            <button class="nav-item" data-panel="activities" onclick="switchPanel('activities')">Activities</button>
-            <button class="nav-item" data-panel="inspiration" onclick="switchPanel('inspiration')">Inspiration</button>
-            <button class="nav-item" data-panel="map" onclick="switchPanel('map')">Map</button>
-            <button class="nav-item" data-panel="itinerary" onclick="switchPanel('itinerary')">Itinerary</button>
-        </nav>
+        <!-- DISCOVER -->
+        <div class="panel" id="panel-discover">
+            <h2 class="page-title">Discover</h2>
+            <p class="page-sub">Find top-rated places using Google and explore curated travel guides</p>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Trip Hub Panel -->
-            <div class="panel active" id="hubPanel">
-                <h2 class="page-title">Trip Hub</h2>
-                <p class="page-subtitle">All your important travel information in one place</p>
+            <p style="font-weight:600;margin-bottom:14px">Quick Searches</p>
+            <div class="quick-btns">
+                <button class="quick-btn" onclick="quickSearch('restaurant','Polignano a Mare')">🍴 Restaurants in Polignano</button>
+                <button class="quick-btn" onclick="quickSearch('restaurant','Ostuni')">🍴 Ostuni Restaurants</button>
+                <button class="quick-btn" onclick="quickSearch('tourist_attraction','Alberobello')">🏛 Alberobello</button>
+                <button class="quick-btn" onclick="quickSearch('cafe','Polignano a Mare')">☕ Cafes &amp; Gelato</button>
+                <button class="quick-btn" onclick="quickSearch('bar','Polignano a Mare')">🍷 Aperitivo Spots</button>
+                <button class="quick-btn" onclick="quickSearch('restaurant','Lecce')">🍴 Lecce Restaurants</button>
+                <button class="quick-btn" onclick="quickSearch('tourist_attraction','Matera')">🏛 Matera</button>
+            </div>
 
-                <div class="hub-grid">
-                    <div class="hub-card">
-                        <h3>✈️ Flights</h3>
-                        <div id="flightDetails">
-                            <p style="color: #999; font-size: 14px; padding: 20px 0;">No flight information added yet</p>
-                        </div>
-                        <div class="payment-status" id="flightPayment">
-                            <div class="payment-label">Payment Status</div>
-                            <div class="payment-options">
-                                <button class="payment-btn unpaid" onclick="setPaymentStatus('flight', 'unpaid')">Not Paid</button>
-                                <button class="payment-btn partial" onclick="setPaymentStatus('flight', 'partial')">Partial</button>
-                                <button class="payment-btn paid" onclick="setPaymentStatus('flight', 'paid')">Paid</button>
-                            </div>
-                        </div>
-                        <button class="add-info-btn" onclick="openInfoModal('flight')">Add Flight</button>
-                    </div>
-
-                    <div class="hub-card">
-                        <h3>🏠 Accommodation</h3>
-                        <div id="hotelDetails">
-                            <p style="color: #999; font-size: 14px; padding: 20px 0;">No accommodation added yet</p>
-                        </div>
-                        <div class="payment-status" id="hotelPayment">
-                            <div class="payment-label">Payment Status</div>
-                            <div class="payment-options">
-                                <button class="payment-btn unpaid" onclick="setPaymentStatus('hotel', 'unpaid')">Not Paid</button>
-                                <button class="payment-btn partial" onclick="setPaymentStatus('hotel', 'partial')">Partial</button>
-                                <button class="payment-btn paid" onclick="setPaymentStatus('hotel', 'paid')">Paid</button>
-                            </div>
-                        </div>
-                        <button class="add-info-btn" onclick="openInfoModal('hotel')">Add Hotel</button>
-                    </div>
-
-                    <div class="hub-card">
-                        <h3>🚗 Car Hire</h3>
-                        <div id="carDetails">
-                            <p style="color: #999; font-size: 14px; padding: 20px 0;">No car hire added yet</p>
-                        </div>
-                        <div class="payment-status" id="carPayment">
-                            <div class="payment-label">Payment Status</div>
-                            <div class="payment-options">
-                                <button class="payment-btn unpaid" onclick="setPaymentStatus('car', 'unpaid')">Not Paid</button>
-                                <button class="payment-btn partial" onclick="setPaymentStatus('car', 'partial')">Partial</button>
-                                <button class="payment-btn paid" onclick="setPaymentStatus('car', 'paid')">Paid</button>
-                            </div>
-                        </div>
-                        <button class="add-info-btn" onclick="openInfoModal('car')">Add Car</button>
-                    </div>
-
-                    <div class="hub-card">
-                        <h3>📋 Important Info</h3>
-                        <div id="importantDetails">
-                            <p style="color: #999; font-size: 14px; padding: 20px 0;">No important info added yet</p>
-                        </div>
-                        <button class="add-info-btn" onclick="openInfoModal('info')">Add Info</button>
-                    </div>
+            <div class="search-box">
+                <h3>Custom Search</h3>
+                <div class="search-row">
+                    <input class="search-input" id="searchLoc" placeholder="e.g. Polignano a Mare, Ostuni, Lecce">
+                    <select class="search-select" id="searchType">
+                        <option value="restaurant">Restaurants</option>
+                        <option value="cafe">Cafes &amp; Bars</option>
+                        <option value="tourist_attraction">Attractions</option>
+                        <option value="lodging">Hotels</option>
+                        <option value="museum">Museums</option>
+                        <option value="park">Parks &amp; Nature</option>
+                    </select>
+                    <button class="search-btn" onclick="doSearch()">Search</button>
                 </div>
+                <p class="search-hint">Results show Google-rated 4.0+ places with real photos and reviews</p>
             </div>
 
-            <!-- Discover Panel -->
-            <div class="panel" id="discoverPanel">
-                <h2 class="page-title">Discover</h2>
-                <p class="page-subtitle">Find top-rated places and curated travel guides</p>
+            <div id="search-results"></div>
 
-                <!-- Quick Discovery Buttons -->
-                <div style="margin-bottom: 32px;">
-                    <h3 style="font-family: var(--serif); font-size: 24px; margin-bottom: 16px;">Popular Searches</h3>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button onclick="quickSearch('restaurants', 'Polignano a Mare')" style="padding: 12px 20px; background: white; border: 1px solid rgba(0,0,0,0.15); cursor: pointer; font-size: 14px;">🍴 Top Restaurants in Polignano</button>
-                        <button onclick="quickSearch('restaurants', 'Ostuni')" style="padding: 12px 20px; background: white; border: 1px solid rgba(0,0,0,0.15); cursor: pointer; font-size: 14px;">🍴 Ostuni Restaurants</button>
-                        <button onclick="quickSearch('tourist_attraction', 'Alberobello')" style="padding: 12px 20px; background: white; border: 1px solid rgba(0,0,0,0.15); cursor: pointer; font-size: 14px;">🏛️ Alberobello Attractions</button>
-                        <button onclick="quickSearch('cafe', 'Polignano a Mare')" style="padding: 12px 20px; background: white; border: 1px solid rgba(0,0,0,0.15); cursor: pointer; font-size: 14px;">☕ Cafes & Gelato</button>
-                        <button onclick="quickSearch('bar', 'Polignano a Mare')" style="padding: 12px 20px; background: white; border: 1px solid rgba(0,0,0,0.15); cursor: pointer; font-size: 14px;">🍷 Aperitivo Spots</button>
-                    </div>
-                </div>
-
-                <!-- Custom Search -->
-                <div style="background: white; padding: 32px; border: 1px solid rgba(0,0,0,0.08); margin-bottom: 48px;">
-                    <h3 style="font-family: var(--serif); font-size: 24px; margin-bottom: 16px;">Custom Search</h3>
-                    
-                    <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; margin-bottom: 24px;">
-                        <input type="text" id="customLocation" placeholder="Enter location (e.g., Polignano a Mare)" style="padding: 14px 16px; border: 1px solid rgba(0,0,0,0.15); font-family: var(--sans); font-size: 15px;">
-                        <select id="customType" style="padding: 14px 16px; border: 1px solid rgba(0,0,0,0.15); font-family: var(--sans); font-size: 15px;">
-                            <option value="restaurant">Restaurants</option>
-                            <option value="cafe">Cafes</option>
-                            <option value="bar">Bars</option>
-                            <option value="tourist_attraction">Attractions</option>
-                            <option value="beach">Beaches</option>
-                            <option value="museum">Museums</option>
-                            <option value="park">Parks</option>
-                        </select>
-                        <button onclick="customSearch()" style="padding: 14px 32px; background: var(--charcoal); color: white; border: none; font-weight: 600; cursor: pointer; font-family: var(--sans); white-space: nowrap;">Search</button>
-                    </div>
-                    
-                    <div id="placesResults"></div>
-                </div>
-
-                <!-- Curated Travel Content -->
-                <div>
-                    <h3 style="font-family: var(--serif); font-size: 28px; margin-bottom: 24px;">Recommended Reading</h3>
-                    <div id="curatedContent" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;"></div>
-                </div>
+            <div style="margin-top:48px">
+                <h3 style="font-family:var(--serif);font-size:28px;margin-bottom:20px">Recommended Reading</h3>
+                <div class="curated-grid" id="curated-grid"></div>
             </div>
+        </div>
 
-            <!-- Activities Panel -->
-            <div class="panel" id="activitiesPanel">
-                <h2 class="page-title">Experiences</h2>
-                <p class="page-subtitle">Places to visit, foods to try, memories to make</p>
-
-                <div class="category-filters">
-                    <button class="category-btn active" data-category="all" onclick="filterActivities('all')">All</button>
-                    <button class="category-btn" data-category="food" onclick="filterActivities('food')">🍴 Food</button>
-                    <button class="category-btn" data-category="beach" onclick="filterActivities('beach')">🏖️ Beach</button>
-                    <button class="category-btn" data-category="historical" onclick="filterActivities('historical')">🏛️ Historical</button>
-                    <button class="category-btn" data-category="nature" onclick="filterActivities('nature')">🌳 Nature</button>
-                    <button class="category-btn" data-category="family" onclick="filterActivities('family')">👨‍👩‍👧 Family</button>
-                </div>
-
-                <div class="activity-masonry" id="activityList"></div>
+        <!-- ACTIVITIES -->
+        <div class="panel" id="panel-activities">
+            <h2 class="page-title">Experiences</h2>
+            <p class="page-sub">Places to visit, food to try, memories to make</p>
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterActs('all',this)">All</button>
+                <button class="filter-btn" onclick="filterActs('food',this)">🍴 Food</button>
+                <button class="filter-btn" onclick="filterActs('beach',this)">🏖 Beach</button>
+                <button class="filter-btn" onclick="filterActs('historical',this)">🏛 Historical</button>
+                <button class="filter-btn" onclick="filterActs('nature',this)">🌳 Nature</button>
+                <button class="filter-btn" onclick="filterActs('family',this)">👨‍👩‍👧 Family</button>
             </div>
+            <div class="activity-grid" id="activity-grid"></div>
+        </div>
 
-            <!-- Inspiration Panel -->
-            <div class="panel" id="inspirationPanel">
-                <h2 class="page-title">Inspiration</h2>
-                <p class="page-subtitle">Articles, blogs, and ideas for your journey</p>
+        <!-- INSPIRATION -->
+        <div class="panel" id="panel-inspiration">
+            <h2 class="page-title">Inspiration</h2>
+            <p class="page-sub">Articles and blogs saved for the trip</p>
+            <div class="insp-grid" id="insp-grid"></div>
+        </div>
 
-                <div class="inspiration-grid" id="inspirationList"></div>
-            </div>
+        <!-- MAP -->
+        <div class="panel" id="panel-map">
+            <h2 class="page-title">Map</h2>
+            <p class="page-sub">All activities plotted — click a pin for details</p>
+            <div id="map"></div>
+        </div>
 
-            <!-- Map Panel -->
-            <div class="panel" id="mapPanel">
-                <h2 class="page-title">Map</h2>
-                <div id="map"></div>
-            </div>
+    </main>
 
-            <!-- Itinerary Panel -->
-            <div class="panel" id="itineraryPanel">
-                <h2 class="page-title">Itinerary</h2>
-                <p class="page-subtitle">Coming soon: Schedule your days</p>
-            </div>
-        </main>
+    <button class="fab" onclick="openAddModal()">+</button>
+    <button class="chat-fab" onclick="toggleChat()">💬</button>
+</div>
 
-        <!-- FAB -->
-        <button class="fab" onclick="openAddModal()">+</button>
-        
-        <!-- Chat FAB -->
-        <button class="chat-fab" onclick="toggleChat()" id="chatFab">💬</button>
+<!-- MODAL: HUB -->
+<div class="modal" id="hubModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('hubModal')">×</button>
+        <h2 class="modal-title" id="hubModalTitle">Add Information</h2>
+        <form id="hubForm" onsubmit="submitHub(event)">
+            <div id="hubFields"></div>
+            <button type="submit" class="submit-btn">Save</button>
+        </form>
     </div>
-    
-    <!-- Chat Panel -->
-    <div class="chat-panel" id="chatPanel">
-        <div class="chat-header">
-            <h3>Travel Assistant</h3>
-            <button class="chat-close" onclick="toggleChat()">&times;</button>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-            <div class="chat-message assistant">
-                <p>👋 Hi! I can help you plan your Puglia trip. Ask me anything!</p>
-                <p style="font-size: 13px; color: #888; margin-top: 8px;">Try: "What should we do on our first day in Polignano?"</p>
-            </div>
-        </div>
-        <div class="chat-input-container">
-            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your trip..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-            <button class="chat-send" onclick="sendChatMessage()">Send</button>
-        </div>
-    </div>
+</div>
 
-    <!-- Activity Modal -->
-    <div class="modal" id="activityModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add Activity</h2>
-                <button class="close-btn" onclick="closeActivityModal()">&times;</button>
+<!-- MODAL: ACTIVITY -->
+<div class="modal" id="actModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('actModal')">×</button>
+        <h2 class="modal-title">Add Activity</h2>
+        <form onsubmit="submitActivity(event)">
+            <div class="form-group">
+                <label class="form-label">Name *</label>
+                <input class="form-input" id="act-name" required>
             </div>
-            <form id="activityForm" onsubmit="handleAddActivity(event)">
-                <div class="form-group">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-input" id="activityName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-textarea" id="activityDescription"></textarea>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" id="act-desc"></textarea>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Location</label>
-                    <input type="text" class="form-input" id="activityLocation">
+                    <input class="form-input" id="act-location" placeholder="e.g. Polignano a Mare">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Category</label>
-                    <select class="form-select" id="activityCategory">
-                        <option value="food">🍴 Food & Drink</option>
-                        <option value="beach">🏖️ Beach & Coast</option>
-                        <option value="historical">🏛️ Historical & Cultural</option>
-                        <option value="nature">🌳 Nature & Outdoors</option>
-                        <option value="family">👨‍👩‍👧 Family Activity</option>
+                    <select class="form-select" id="act-cat">
+                        <option value="food">🍴 Food</option>
+                        <option value="beach">🏖 Beach</option>
+                        <option value="historical">🏛 Historical</option>
+                        <option value="nature">🌳 Nature</option>
+                        <option value="family">👨‍👩‍👧 Family</option>
                     </select>
                 </div>
-                <button type="submit" class="submit-btn">Add Activity</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Inspiration Modal -->
-    <div class="modal" id="inspirationModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add Inspiration</h2>
-                <button class="close-btn" onclick="closeInspirationModal()">&times;</button>
             </div>
-            <form id="inspirationForm" onsubmit="handleAddInspiration(event)">
-                <div class="form-group">
-                    <label class="form-label">URL</label>
-                    <input type="url" class="form-input" id="inspirationUrl" placeholder="https://..." required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Title (optional - auto-fetched)</label>
-                    <input type="text" class="form-input" id="inspirationTitle">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <textarea class="form-textarea" id="inspirationNotes"></textarea>
-                </div>
-                <button type="submit" class="submit-btn">Add to Board</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Info Modal -->
-    <div class="modal" id="infoModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="infoModalTitle">Add Information</h2>
-                <button class="close-btn" onclick="closeInfoModal()">&times;</button>
+            <div class="form-group">
+                <label class="form-label">Notes (tips, booking info, best time)</label>
+                <textarea class="form-textarea" id="act-notes" style="min-height:70px"></textarea>
             </div>
-            <form id="infoForm" onsubmit="handleAddInfo(event)">
-                <div id="infoFormFields"></div>
-                <button type="submit" class="submit-btn">Save</button>
-            </form>
+            <button type="submit" class="submit-btn">Add Activity</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: INSPIRATION -->
+<div class="modal" id="inspModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('inspModal')">×</button>
+        <h2 class="modal-title">Save Inspiration</h2>
+        <form onsubmit="submitInspiration(event)">
+            <div class="form-group">
+                <label class="form-label">URL *</label>
+                <input class="form-input" id="insp-url" type="url" placeholder="https://" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Title *</label>
+                <input class="form-input" id="insp-title" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" id="insp-desc" style="min-height:70px"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Save to Board</button>
+        </form>
+    </div>
+</div>
+
+<!-- CHAT PANEL -->
+<div class="chat-panel" id="chatPanel">
+    <div class="chat-head">
+        <h3>✈️ Travel Assistant</h3>
+        <button class="chat-head-close" onclick="toggleChat()">×</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs">
+        <div class="chat-msg ai">
+            <div class="chat-bubble">👋 Hi! I'm your Puglia travel assistant — ask me anything about planning your trip!<br><br><em>Try: "What should we do first in Polignano?"</em></div>
         </div>
     </div>
+    <div class="chat-bottom">
+        <input class="chat-input-field" id="chatInput" placeholder="Ask about your trip..." onkeypress="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">Send</button>
+    </div>
+</div>
 
-    <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyBV9gASy68Bifd9IAOlxKT1ImhC-BlgoVM",
-            authDomain: "puglia-journey.firebaseapp.com",
-            projectId: "puglia-journey",
-            storageBucket: "puglia-journey.firebasestorage.app",
-            messagingSenderId: "993161943057",
-            appId: "1:993161943057:web:81ce04204fdd21d5b279b0"
-        };
-        
-        // Google Places API Config (Optional - for discovering top-rated places)
-        const GOOGLE_PLACES_CONFIG = {
-            apiKey: 'AIzaSyDDIwAc4x3_D99RqyUtkW9wLMX_c-BAWSo',
-            enabled: true
-        };
-        
-        // Gemini AI Config (Free tier - 60 requests/minute)
-        const GEMINI_CONFIG = {
-            apiKey: 'AIzaSyDlray53VkaaYDAaywnQ5tIaGoDntc7SzY',
-            enabled: true
-        };
-        
-        // Authorized Users - Only these emails can access the app
-        const AUTHORIZED_EMAILS = [
-            'david.cant@quantium.com',
-            'david.cant.84@gmail.com',  // Personal Gmail
-            // Add family emails below:
-            // 'spouse@gmail.com',
-            // 'kate@email.com',
-            // 'steve@email.com',
-        ];
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBV9gASy68Bifd9IAOlxKT1ImhC-BlgoVM",
+    authDomain: "puglia-journey.firebaseapp.com",
+    projectId: "puglia-journey",
+    storageBucket: "puglia-journey.firebasestorage.app",
+    messagingSenderId: "993161943057",
+    appId: "1:993161943057:web:81ce04204fdd21d5b279b0"
+};
+const GOOGLE_KEY  = 'AIzaSyDDIwAc4x3_D99RqyUtkW9wLMX_c-BAWSo';
+const GEMINI_KEY  = 'AIzaSyDlray53VkaaYDAaywnQ5tIaGoDntc7SzY';
+const ALLOWED     = ['david.cant@quantium.com','david.cant.84@gmail.com'];
 
-        let app, auth, db;
-        let currentUser = null;
-        let currentInfoType = null;
-        let currentCategory = 'all';
-        let map = null;
-        let activities = [];
-        let inspiration = [];
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let auth, db, user, gmap, placesService, geocoder;
+let activities = [], inspiration = [];
+let currentFilter = 'all', currentHubType = null;
+let googleReady = false, markers = [], activeInfo = null;
 
-        function initFirebase() {
-            if (!firebaseConfig.apiKey) {
-                console.warn('Firebase not configured');
-                return false;
-            }
+// ═══════════════════════════════════════════
+// GOOGLE MAPS CALLBACK (called by SDK)
+// ═══════════════════════════════════════════
+function googleMapsLoaded() {
+    googleReady = true;
+    geocoder = new google.maps.Geocoder();
+    console.log('✅ Google Maps ready');
+}
 
-            try {
-                app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
+// ═══════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════
+firebase.initializeApp(FIREBASE_CONFIG);
+auth = firebase.auth();
+db   = firebase.firestore();
+db.enablePersistence().catch(() => {});
 
-                db.enablePersistence().catch(err => console.warn('Persistence:', err.code));
-
-                auth.onAuthStateChanged(user => {
-                    if (user) {
-                        // Check if user email is authorized
-                        if (!AUTHORIZED_EMAILS.includes(user.email)) {
-                            alert(`Access denied. ${user.email} is not authorized.\n\nPlease contact the trip organizer to be added.`);
-                            auth.signOut();
-                            return;
-                        }
-                        
-                        currentUser = user;
-                        showApp();
-                        loadData();
-                    } else {
-                        showAuthScreen();
-                    }
-                });
-
-                return true;
-            } catch (error) {
-                console.error('Firebase init error:', error);
-                return false;
-            }
+auth.onAuthStateChanged(u => {
+    if (u) {
+        if (!ALLOWED.includes(u.email)) {
+            alert('Access denied: ' + u.email + ' — contact David to be added.');
+            auth.signOut(); return;
         }
+        user = u;
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('app').classList.add('active');
+        document.getElementById('userAvatar').src = u.photoURL || '';
+        document.getElementById('userName').textContent = (u.displayName || '').split(' ')[0];
+        startListeners();
+        renderCurated();
+    } else {
+        document.getElementById('authScreen').style.display = 'flex';
+        document.getElementById('app').classList.remove('active');
+    }
+});
 
-        async function signInWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                await auth.signInWithPopup(provider);
-            } catch (error) {
-                alert('Sign in failed');
-            }
-        }
+function signInWithGoogle() {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(() => alert('Sign in failed'));
+}
+function signOut() { auth.signOut(); }
 
-        async function signOut() {
-            await auth.signOut();
-        }
+// ═══════════════════════════════════════════
+// FIRESTORE LISTENERS
+// ═══════════════════════════════════════════
+function startListeners() {
+    db.collection('activities').orderBy('createdAt','desc').onSnapshot(snap => {
+        activities = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderActivities();
+        if (gmap) refreshMarkers();
+    }, err => console.error('activities listener:', err));
 
-        function showAuthScreen() {
-            document.getElementById('authScreen').style.display = 'flex';
-            document.getElementById('app').classList.remove('active');
-        }
+    db.collection('inspiration').orderBy('createdAt','desc').onSnapshot(snap => {
+        inspiration = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderInspiration();
+    }, err => console.error('inspiration listener:', err));
 
-        function showApp() {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('app').classList.add('active');
-            document.getElementById('userAvatar').src = currentUser.photoURL;
-        }
+    ['flight','hotel','car','info'].forEach(listenHub);
+    ['flight','hotel','car'].forEach(listenPayment);
+}
 
-        // Panel Navigation
-        function switchPanel(panel) {
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`[data-panel="${panel}"]`).classList.add('active');
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+function showPanel(name, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (name === 'map') initMap();
+}
 
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(`${panel}Panel`).classList.add('active');
+function openAddModal() {
+    const active = document.querySelector('.panel.active')?.id;
+    openModal(active === 'panel-inspiration' ? 'inspModal' : 'actModal');
+}
 
-            if (panel === 'map' && !map) {
-                initMap();
-            }
-            
-            if (panel === 'discover') {
-                loadCuratedContent();
-            }
-        }
+// ═══════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-        // Load Data
-        async function loadData() {
-            // Load activities
-            db.collection('activities')
-                .orderBy('createdAt', 'desc')
-                .onSnapshot(snapshot => {
-                    activities = [];
-                    snapshot.forEach(doc => {
-                        activities.push({ id: doc.id, ...doc.data() });
-                    });
-                    renderActivities();
-                    loadComments();
-                });
+// ═══════════════════════════════════════════
+// ACTIVITIES
+// ═══════════════════════════════════════════
+const EMOJIS = { food:'🍴', beach:'🏖️', historical:'🏛️', nature:'🌳', family:'👨‍👩‍👧' };
 
-            // Load inspiration
-            db.collection('inspiration')
-                .orderBy('createdAt', 'desc')
-                .onSnapshot(snapshot => {
-                    inspiration = [];
-                    snapshot.forEach(doc => {
-                        inspiration.push({ id: doc.id, ...doc.data() });
-                    });
-                    renderInspiration();
-                });
+function filterActs(cat, btn) {
+    currentFilter = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderActivities();
+}
 
-            // Load trip info
-            ['flight', 'hotel', 'car', 'info'].forEach(type => {
-                db.collection('tripInfo')
-                    .where('type', '==', type)
-                    .onSnapshot(snapshot => {
-                        renderTripInfo(type, snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                    });
-            });
-            
-            // Load payment status
-            loadPaymentStatus();
-        }
-
-        // Category Filtering
-        function filterActivities(category) {
-            currentCategory = category;
-            
-            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-category="${category}"]`).classList.add('active');
-            
-            renderActivities();
-        }
-
-        function renderActivities() {
-            const list = document.getElementById('activityList');
-            
-            let filtered = activities;
-            if (currentCategory !== 'all') {
-                filtered = activities.filter(a => a.category === currentCategory);
-            }
-
-            if (filtered.length === 0) {
-                list.innerHTML = '<p style="color: #999;">No activities yet. Add your first one!</p>';
-                return;
-            }
-
-            list.innerHTML = filtered.map(a => {
-                const categoryEmoji = {
-                    food: '🍴',
-                    beach: '🏖️',
-                    historical: '🏛️',
-                    nature: '🌳',
-                    family: '👨‍👩‍👧'
-                };
-                
-                return `
-                <div class="activity-item">
-                    <div class="activity-emoji">${categoryEmoji[a.category] || '📍'}</div>
-                    <div class="activity-body">
-                        <h3 class="activity-title">${a.name}</h3>
-                        <div class="activity-location">${a.location || 'Puglia'}</div>
-                        <p class="activity-desc">${a.description || ''}</p>
-                        <div class="activity-meta">
-                            <div class="vote-controls">
-                                <button class="vote-btn" onclick="vote('${a.id}', 1)">👍</button>
-                                <span class="vote-count">${a.votes || 0}</span>
-                                <button class="vote-btn" onclick="vote('${a.id}', -1)">👎</button>
-                            </div>
-                            ${a.lat && a.lng ? `<button onclick="showOnMap('${a.id}')" style="padding: 8px 16px; background: var(--sea); color: white; border: none; font-size: 13px; cursor: pointer;">📍 Map</button>` : ''}
-                        </div>
-                        <div class="comments-section">
-                            <button class="comments-toggle" onclick="toggleComments('${a.id}')">
-                                💬 ${(a.commentCount || 0)} comments
-                            </button>
-                            <div class="comments-list" id="comments-${a.id}">
-                                <div id="comments-content-${a.id}"></div>
-                                <div class="comment-form">
-                                    <input type="text" class="comment-input" id="comment-input-${a.id}" placeholder="Add a comment...">
-                                    <button class="comment-submit" onclick="addComment('${a.id}')">Post</button>
-                                </div>
-                            </div>
-                        </div>
+function renderActivities() {
+    const list = currentFilter === 'all' ? activities : activities.filter(a => a.category === currentFilter);
+    const el = document.getElementById('activity-grid');
+    if (!list.length) { el.innerHTML = '<p class="empty-state">No activities yet — be the first to add one!</p>'; return; }
+    el.innerHTML = list.map(a => `
+        <div class="act-card">
+            <div class="act-emoji">${EMOJIS[a.category] || '📍'}</div>
+            <div class="act-body">
+                <h3 class="act-title">${x(a.name)}</h3>
+                <div class="act-location">${x(a.location || 'Puglia')}</div>
+                ${a.description ? `<p class="act-desc">${x(a.description)}</p>` : ''}
+                ${a.notes ? `<p style="font-size:13px;color:#777;font-style:italic;margin-bottom:12px">💡 ${x(a.notes)}</p>` : ''}
+                ${a.rating ? `<p style="font-size:13px;color:#555;margin-bottom:12px">⭐ ${a.rating} Google${a.priceLevel ? ' · ' + a.priceLevel : ''}</p>` : ''}
+                <div class="act-meta">
+                    <div class="vote-row">
+                        <button class="vote-btn" onclick="vote('${a.id}',1)">👍</button>
+                        <span class="vote-count">${a.votes || 0}</span>
+                        <button class="vote-btn" onclick="vote('${a.id}',-1)">👎</button>
+                    </div>
+                    ${a.lat && a.lng ? `<button class="map-btn" onclick="jumpToMap('${a.id}')">📍 Map</button>` : ''}
+                </div>
+                <button class="comments-toggle" onclick="toggleComments('${a.id}')">💬 Comments</button>
+                <div class="comments-area" id="ca-${a.id}">
+                    <div id="cl-${a.id}"></div>
+                    <div class="comment-form">
+                        <input class="comment-input" id="ci-${a.id}" placeholder="Add a comment...">
+                        <button class="comment-post" onclick="postComment('${a.id}')">Post</button>
                     </div>
                 </div>
-            `}).join('');
-            
-            // Update map markers if map is visible
-            if (map) {
-                updateMapMarkers();
+                <p class="added-by">Added by ${x(a.createdByName || 'group member')}</p>
+            </div>
+        </div>`).join('');
+    list.forEach(a => watchComments(a.id));
+}
+
+async function submitActivity(e) {
+    e.preventDefault();
+    await db.collection('activities').add({
+        name: document.getElementById('act-name').value,
+        description: document.getElementById('act-desc').value,
+        location: document.getElementById('act-location').value,
+        category: document.getElementById('act-cat').value,
+        notes: document.getElementById('act-notes').value,
+        votes: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: user.uid,
+        createdByName: user.displayName
+    });
+    closeModal('actModal');
+    e.target.reset();
+}
+
+async function vote(id, val) {
+    const ref = db.collection('votes').doc(`${id}_${user.uid}`);
+    const doc = await ref.get();
+    if (doc.exists && doc.data().value === val) {
+        await ref.delete();
+    } else {
+        await ref.set({ activityId: id, userId: user.uid, value: val, ts: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+    const snap = await db.collection('votes').where('activityId','==',id).get();
+    let total = 0;
+    snap.forEach(d => total += d.data().value);
+    await db.collection('activities').doc(id).update({ votes: total });
+}
+
+function toggleComments(id) {
+    const el = document.getElementById('ca-' + id);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+function watchComments(actId) {
+    db.collection('comments').where('activityId','==',actId).orderBy('ts','asc')
+        .onSnapshot(snap => {
+            const el = document.getElementById('cl-' + actId);
+            if (!el) return;
+            el.innerHTML = snap.docs.map(d => {
+                const c = d.data();
+                return `<div class="comment-item"><div class="comment-author">${x(c.author)}</div>${x(c.text)}</div>`;
+            }).join('');
+        }, () => {});
+}
+
+async function postComment(actId) {
+    const input = document.getElementById('ci-' + actId);
+    const text = input.value.trim();
+    if (!text) return;
+    await db.collection('comments').add({
+        activityId: actId, text,
+        author: user.displayName,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value = '';
+}
+
+// ═══════════════════════════════════════════
+// INSPIRATION
+// ═══════════════════════════════════════════
+function renderInspiration() {
+    const el = document.getElementById('insp-grid');
+    if (!inspiration.length) { el.innerHTML = '<p class="empty-state">No inspiration saved yet!</p>'; return; }
+    el.innerHTML = inspiration.map(i => `
+        <div class="insp-card" onclick="window.open('${x(i.url)}','_blank')">
+            <div class="insp-title">${x(i.title)}</div>
+            <div class="insp-source">${x(i.source || '')}</div>
+            ${i.description ? `<p class="insp-desc">${x(i.description)}</p>` : ''}
+            <div class="insp-votes">
+                <button class="insp-vote-btn" onclick="event.stopPropagation();voteInsp('${i.id}',1)">👍</button>
+                <span style="font-weight:600">${i.votes || 0}</span>
+                <button class="insp-vote-btn" onclick="event.stopPropagation();voteInsp('${i.id}',-1)">👎</button>
+            </div>
+        </div>`).join('');
+}
+
+async function submitInspiration(e) {
+    e.preventDefault();
+    const url = document.getElementById('insp-url').value;
+    let host = '';
+    try { host = new URL(url).hostname; } catch(e){}
+    await db.collection('inspiration').add({
+        url, title: document.getElementById('insp-title').value,
+        description: document.getElementById('insp-desc').value,
+        source: host, votes: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: user.uid
+    });
+    closeModal('inspModal');
+    e.target.reset();
+}
+
+async function voteInsp(id, val) {
+    const cur = inspiration.find(i => i.id === id);
+    if (!cur) return;
+    await db.collection('inspiration').doc(id).update({ votes: (cur.votes || 0) + val });
+}
+
+// ═══════════════════════════════════════════
+// TRIP HUB
+// ═══════════════════════════════════════════
+const HUB_FIELDS = {
+    flight: ['Airline','Flight Number','Departure Airport','Arrival Airport','Date','Departure Time','Arrival Time','Confirmation Code'],
+    hotel:  ['Hotel Name','Address','Check In Date','Check Out Date','Confirmation Code','Phone Number'],
+    car:    ['Rental Company','Pickup Location','Pickup Date','Return Location','Return Date','Confirmation Code'],
+    info:   ['Title','Details','Reference Number','Contact']
+};
+
+function openHubModal(type) {
+    currentHubType = type;
+    const TITLES = { flight:'Add Flight', hotel:'Add Accommodation', car:'Add Car Hire', info:'Add Important Info' };
+    document.getElementById('hubModalTitle').textContent = TITLES[type];
+    document.getElementById('hubFields').innerHTML = HUB_FIELDS[type].map(f => `
+        <div class="form-group">
+            <label class="form-label">${f}</label>
+            <input class="form-input" name="${f.toLowerCase().replace(/[^a-z0-9]/g,'_')}">
+        </div>`).join('');
+    openModal('hubModal');
+}
+
+async function submitHub(e) {
+    e.preventDefault();
+    const data = {
+        type: currentHubType, createdBy: user.uid, createdByName: user.displayName,
+        sharedWith: 'private', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    new FormData(e.target).forEach((v,k) => { if (v.trim()) data[k] = v.trim(); });
+    await db.collection('tripInfo').add(data);
+    closeModal('hubModal');
+    e.target.reset();
+}
+
+function listenHub(type) {
+    db.collection('tripInfo').where('type','==',type).onSnapshot(snap => {
+        const el = document.getElementById(`hub-${type}-data`);
+        if (!el) return;
+        const mine = snap.docs.filter(d => d.data().createdBy === user.uid || d.data().sharedWith === 'everyone');
+        if (!mine.length) {
+            el.innerHTML = `<p style="color:#999;font-size:14px;padding:12px 0">No ${type} information added yet</p>`;
+            return;
+        }
+        const SKIP = new Set(['type','createdBy','createdByName','sharedWith','createdAt']);
+        el.innerHTML = mine.map(doc => {
+            const d = doc.data();
+            const rows = Object.entries(d).filter(([k]) => !SKIP.has(k))
+                .map(([k,v]) => `<div class="hub-row"><span class="hub-label">${fmtKey(k)}</span><span class="hub-value">${x(v)}</span></div>`)
+                .join('');
+            const isOwner  = d.createdBy === user.uid;
+            const isShared = d.sharedWith === 'everyone';
+            const ctrl = isOwner
+                ? `<div class="privacy-row">
+                    <span style="font-size:13px;color:#888">${isShared ? 'Visible to group' : 'Only you can see this'}</span>
+                    <button class="privacy-btn ${isShared ? 'shared' : ''}" onclick="toggleShare('${doc.id}','${isShared ? 'private' : 'everyone'}',this)">
+                        ${isShared ? '🌍 Shared' : '🔒 Private'}
+                    </button>
+                   </div>`
+                : `<p style="font-size:12px;color:#aaa;margin-top:8px">Shared by ${x(d.createdByName || 'group member')}</p>`;
+            return `<div style="margin-bottom:12px">${rows}${ctrl}</div>`;
+        }).join('<hr style="border:none;border-top:1px solid rgba(0,0,0,.06);margin:12px 0">');
+    }, () => {});
+}
+
+async function toggleShare(docId, newVal, btn) {
+    await db.collection('tripInfo').doc(docId).update({ sharedWith: newVal });
+    btn.textContent  = newVal === 'everyone' ? '🌍 Shared' : '🔒 Private';
+    btn.className    = 'privacy-btn' + (newVal === 'everyone' ? ' shared' : '');
+    btn.previousElementSibling.textContent = newVal === 'everyone' ? 'Visible to group' : 'Only you can see this';
+    btn.setAttribute('onclick', `toggleShare('${docId}','${newVal === 'everyone' ? 'private' : 'everyone'}',this)`);
+}
+
+function listenPayment(type) {
+    db.collection('paymentStatus').doc(type).onSnapshot(doc => {
+        if (!doc.exists) return;
+        const s = doc.data().status;
+        const c = document.getElementById('pay-' + type);
+        if (!c) return;
+        c.querySelectorAll('.pay-btn').forEach(btn => {
+            btn.className = 'pay-btn';
+            const t = btn.textContent.toLowerCase();
+            if ((s === 'unpaid' && t.includes('not')) || (s === 'partial' && t.includes('partial')) || (s === 'paid' && t.includes('paid'))) {
+                btn.classList.add('active-' + s);
             }
-        }
-
-        async function loadComments() {
-            activities.forEach(activity => {
-                db.collection('comments')
-                    .where('activityId', '==', activity.id)
-                    .orderBy('timestamp', 'asc')
-                    .onSnapshot(snapshot => {
-                        const comments = [];
-                        snapshot.forEach(doc => {
-                            comments.push(doc.data());
-                        });
-                        
-                        // Update comment count
-                        activity.commentCount = comments.length;
-                        
-                        // Render comments
-                        const container = document.getElementById(`comments-content-${activity.id}`);
-                        if (container) {
-                            container.innerHTML = comments.map(c => `
-                                <div class="comment">
-                                    <div class="comment-author">${c.author}</div>
-                                    <div class="comment-text">${c.text}</div>
-                                </div>
-                            `).join('');
-                        }
-                        
-                        // Update comment count in UI
-                        renderActivities();
-                    });
-            });
-        }
-
-        function toggleComments(activityId) {
-            const list = document.getElementById(`comments-${activityId}`);
-            list.classList.toggle('active');
-        }
-
-        async function addComment(activityId) {
-            const input = document.getElementById(`comment-input-${activityId}`);
-            const text = input.value.trim();
-            if (!text) return;
-
-            try {
-                await db.collection('comments').add({
-                    activityId,
-                    text,
-                    author: currentUser.displayName,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                input.value = '';
-            } catch (error) {
-                console.error('Error adding comment:', error);
-            }
-        }
-
-        function renderInspiration() {
-            const list = document.getElementById('inspirationList');
-            
-            if (inspiration.length === 0) {
-                list.innerHTML = '<p style="color: #999;">No inspiration yet. Add articles or blog posts!</p>';
-                return;
-            }
-
-            list.innerHTML = inspiration.map(i => `
-                <div class="inspiration-card" onclick="window.open('${i.url}', '_blank')">
-                    <div class="inspiration-body">
-                        <div class="inspiration-title">${i.title}</div>
-                        <div class="inspiration-source">${new URL(i.url).hostname}</div>
-                        ${i.description ? `<p class="inspiration-desc">${i.description}</p>` : ''}
-                        <div class="inspiration-meta">
-                            <div class="inspiration-votes">
-                                <button class="inspiration-vote-btn" onclick="voteInspiration(event, '${i.id}', 1)">👍</button>
-                                <span>${i.votes || 0}</span>
-                                <button class="inspiration-vote-btn" onclick="voteInspiration(event, '${i.id}', -1)">👎</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function voteInspiration(event, id, value) {
-            event.stopPropagation();
-            // Same voting logic as activities
-        }
-
-        function renderTripInfo(type, data) {
-            const container = document.getElementById(`${type === 'flight' ? 'flight' : type === 'hotel' ? 'hotel' : type === 'car' ? 'car' : 'important'}Details`);
-            
-            // Filter: Only show items created by current user OR explicitly shared
-            const visibleData = data.filter(item => 
-                item.createdBy === currentUser.uid || item.sharedWith === 'everyone'
-            );
-            
-            if (visibleData.length === 0) {
-                container.innerHTML = `<p style="color: #999; font-size: 14px; padding: 20px 0;">No ${type} information added yet</p>`;
-                return;
-            }
-
-            container.innerHTML = visibleData.map(item => {
-                const isOwner = item.createdBy === currentUser.uid;
-                const isShared = item.sharedWith === 'everyone';
-                const fields = Object.entries(item).filter(([k,v]) => k !== 'id' && k !== 'type' && k !== 'createdAt' && k !== 'createdBy' && k !== 'sharedWith');
-                
-                return `
-                    ${fields.map(([key, value]) => `
-                        <div class="hub-detail">
-                            <span class="hub-label">${formatLabel(key)}</span>
-                            <span class="hub-value">${value}</span>
-                        </div>
-                    `).join('')}
-                    ${isOwner ? `
-                        <div class="hub-detail" style="background: rgba(0,0,0,0.02); margin-top: 12px; padding: 10px;">
-                            <span class="hub-label">Visibility</span>
-                            <button onclick="toggleTripInfoSharing('${item.id}', '${isShared ? 'private' : 'everyone'}')" 
-                                    style="padding: 6px 14px; background: ${isShared ? '#5C6E3C' : '#999'}; color: white; border: none; font-size: 12px; cursor: pointer; border-radius: 4px;">
-                                ${isShared ? '🌍 Shared' : '🔒 Private'}
-                            </button>
-                        </div>
-                    ` : `
-                        <p style="font-size: 12px; color: #888; margin-top: 12px; font-style: italic;">Shared by ${item.createdByName || 'group member'}</p>
-                    `}
-                `;
-            }).join('<div style="border-top: 1px solid rgba(0,0,0,0.08); margin: 16px 0;"></div>');
-        }
-        
-        async function toggleTripInfoSharing(itemId, newStatus) {
-            try {
-                await db.collection('tripInfo').doc(itemId).update({
-                    sharedWith: newStatus
-                });
-            } catch (error) {
-                console.error('Error updating sharing:', error);
-            }
-        }
-
-        function formatLabel(key) {
-            return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        }
-
-        // Modals
-        function openAddModal() {
-            const panel = document.querySelector('.panel.active').id;
-            if (panel === 'activitiesPanel') {
-                openActivityModal();
-            } else if (panel === 'inspirationPanel') {
-                openInspirationModal();
-            } else {
-                openActivityModal(); // Default
-            }
-        }
-
-        function openActivityModal() {
-            document.getElementById('activityModal').classList.add('active');
-        }
-
-        function closeActivityModal() {
-            document.getElementById('activityModal').classList.remove('active');
-            document.getElementById('activityForm').reset();
-        }
-
-        function openInspirationModal() {
-            document.getElementById('inspirationModal').classList.add('active');
-        }
-
-        function closeInspirationModal() {
-            document.getElementById('inspirationModal').classList.remove('active');
-            document.getElementById('inspirationForm').reset();
-        }
-
-        async function handleAddActivity(e) {
-            e.preventDefault();
-
-            const activity = {
-                name: document.getElementById('activityName').value,
-                description: document.getElementById('activityDescription').value,
-                location: document.getElementById('activityLocation').value,
-                category: document.getElementById('activityCategory').value,
-                votes: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid,
-                createdByName: currentUser.displayName
-            };
-
-            try {
-                await db.collection('activities').add(activity);
-                closeActivityModal();
-            } catch (error) {
-                alert('Failed to add activity');
-            }
-        }
-
-        async function handleAddInspiration(e) {
-            e.preventDefault();
-
-            const url = document.getElementById('inspirationUrl').value;
-            const title = document.getElementById('inspirationTitle').value;
-            const notes = document.getElementById('inspirationNotes').value;
-
-            const inspiration = {
-                url,
-                title: title || new URL(url).hostname,
-                description: notes,
-                votes: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid
-            };
-
-            try {
-                await db.collection('inspiration').add(inspiration);
-                closeInspirationModal();
-            } catch (error) {
-                alert('Failed to add inspiration');
-            }
-        }
-
-        async function vote(activityId, value) {
-            const voteId = `${activityId}_${currentUser.uid}`;
-
-            try {
-                const voteRef = db.collection('votes').doc(voteId);
-                const voteDoc = await voteRef.get();
-
-                if (voteDoc.exists) {
-                    await voteRef.update({ value });
-                } else {
-                    await voteRef.set({
-                        activityId,
-                        userId: currentUser.uid,
-                        value,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-
-                recalculateVotes(activityId);
-            } catch (error) {
-                console.error('Vote error:', error);
-            }
-        }
-
-        async function recalculateVotes(activityId) {
-            const votesSnapshot = await db.collection('votes')
-                .where('activityId', '==', activityId)
-                .get();
-
-            let total = 0;
-            votesSnapshot.forEach(doc => {
-                total += doc.data().value;
-            });
-
-            await db.collection('activities').doc(activityId).update({ votes: total });
-        }
-
-        // Info Modal
-        function openInfoModal(type) {
-            currentInfoType = type;
-            const title = document.getElementById('infoModalTitle');
-            const fields = document.getElementById('infoFormFields');
-
-            const fieldSets = {
-                flight: ['Airline', 'Flight Number', 'Departure', 'Arrival', 'Date', 'Time', 'Confirmation'],
-                hotel: ['Hotel Name', 'Address', 'Check In', 'Check Out', 'Confirmation', 'Phone'],
-                car: ['Company', 'Pickup Location', 'Pickup Date', 'Return Date', 'Confirmation'],
-                info: ['Title', 'Details', 'Reference Number', 'Contact']
-            };
-
-            title.textContent = `Add ${type.charAt(0).toUpperCase() + type.slice(1)} Information`;
-            fields.innerHTML = fieldSets[type].map(field => `
-                <div class="form-group">
-                    <label class="form-label">${field}</label>
-                    <input type="text" class="form-input" name="${field.toLowerCase().replace(/ /g, '')}">
-                </div>
-            `).join('');
-
-            document.getElementById('infoModal').classList.add('active');
-        }
-
-        function closeInfoModal() {
-            document.getElementById('infoModal').classList.remove('active');
-            document.getElementById('infoForm').reset();
-        }
-
-        async function handleAddInfo(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const data = {
-                type: currentInfoType,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid,
-                createdByName: currentUser.displayName,
-                sharedWith: 'private' // Default to private, user can share later
-            };
-
-            formData.forEach((value, key) => {
-                if (value) data[key] = value;
-            });
-
-            try {
-                await db.collection('tripInfo').add(data);
-                closeInfoModal();
-            } catch (error) {
-                alert('Failed to add information');
-            }
-        }
-
-        // Payment Status Management
-        async function setPaymentStatus(type, status) {
-            try {
-                // Update or create payment status document
-                const docRef = db.collection('paymentStatus').doc(type);
-                await docRef.set({
-                    status,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: currentUser.uid
-                });
-                
-                // Update UI
-                updatePaymentButtons(type, status);
-            } catch (error) {
-                console.error('Error setting payment status:', error);
-            }
-        }
-        
-        function updatePaymentButtons(type, status) {
-            const container = document.getElementById(`${type}Payment`);
-            if (!container) return;
-            
-            const buttons = container.querySelectorAll('.payment-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent.toLowerCase().includes(status)) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-        
-        function loadPaymentStatus() {
-            ['flight', 'hotel', 'car'].forEach(type => {
-                db.collection('paymentStatus').doc(type)
-                    .onSnapshot(doc => {
-                        if (doc.exists) {
-                            updatePaymentButtons(type, doc.data().status);
-                        }
-                    });
-            });
-        }
-
-        // Map
-        function initMap() {
-            map = L.map('map').setView([40.7816, 17.2368], 9);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-        }
-
-        // Google Places Search
-        // Google Places - Quick Search with Presets
-        async function quickSearch(type, location) {
-            document.getElementById('customLocation').value = location;
-            document.getElementById('customType').value = type;
-            await customSearch();
-        }
-        
-        async function customSearch() {
-            const location = document.getElementById('customLocation').value.trim();
-            const type = document.getElementById('customType').value;
-            const resultsDiv = document.getElementById('placesResults');
-            
-            if (!location) {
-                resultsDiv.innerHTML = '<p style="color: #999;">Please enter a location</p>';
-                return;
-            }
-            
-            if (!GOOGLE_PLACES_CONFIG.enabled || !GOOGLE_PLACES_CONFIG.apiKey) {
-                resultsDiv.innerHTML = `
-                    <div style="padding: 24px; background: rgba(199,89,52,0.1); border: 1px solid var(--terracotta);">
-                        <p style="margin-bottom: 12px;"><strong>Google Places API not enabled</strong></p>
-                        <p style="font-size: 14px; color: #666;">Add your Google Places API key to enable discovery</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            resultsDiv.innerHTML = '<p style="color: #999; padding: 20px;">Searching for top-rated places...</p>';
-            
-            try {
-                // Pre-defined Puglia location coordinates (faster, more reliable)
-                const puglia_locations = {
-                    'polignano a mare': { lat: 40.9964, lng: 17.2198 },
-                    'polignano': { lat: 40.9964, lng: 17.2198 },
-                    'ostuni': { lat: 40.7316, lng: 17.5797 },
-                    'alberobello': { lat: 40.7816, lng: 17.2368 },
-                    'lecce': { lat: 40.3515, lng: 18.1750 },
-                    'bari': { lat: 41.1171, lng: 16.8719 },
-                    'monopoli': { lat: 40.9538, lng: 17.3082 },
-                    'locorotondo': { lat: 40.7548, lng: 17.3277 },
-                    'cisternino': { lat: 40.7398, lng: 17.4254 },
-                    'martina franca': { lat: 40.7052, lng: 17.3373 }
-                };
-                
-                let lat, lng;
-                const locationLower = location.toLowerCase();
-                
-                // Check if it's a known Puglia location
-                if (puglia_locations[locationLower]) {
-                    ({ lat, lng } = puglia_locations[locationLower]);
-                } else {
-                    // Fallback to geocoding with Puglia hint
-                    const geocodeResponse = await fetch(
-                        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&components=country:IT|administrative_area:Puglia&key=${GOOGLE_PLACES_CONFIG.apiKey}`
-                    );
-                    const geocodeData = await geocodeResponse.json();
-                    
-                    if (!geocodeData.results || geocodeData.results.length === 0) {
-                        resultsDiv.innerHTML = `
-                            <p style="color: #999;">Location not found. Try one of these:</p>
-                            <ul style="color: #666; margin-top: 12px; line-height: 2;">
-                                <li>Polignano a Mare</li>
-                                <li>Ostuni</li>
-                                <li>Alberobello</li>
-                                <li>Lecce</li>
-                                <li>Monopoli</li>
-                                <li>Locorotondo</li>
-                            </ul>
-                        `;
-                        return;
-                    }
-                    
-                    ({ lat, lng } = geocodeData.results[0].geometry.location);
-                }
-                
-                // Nearby search with better parameters
-                const placesResponse = await fetch(
-                    `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=${type}&rankby=prominence&key=${GOOGLE_PLACES_CONFIG.apiKey}`
-                );
-                const placesData = await placesResponse.json();
-                
-                if (!placesData.results || placesData.results.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color: #999;">No results found. Try a different type or location.</p>';
-                    return;
-                }
-                
-                // Get top results (4+ stars only)
-                const topPlaces = placesData.results
-                    .filter(p => p.rating && p.rating >= 4.0)
-                    .sort((a, b) => (b.rating * (b.user_ratings_total || 1)) - (a.rating * (a.user_ratings_total || 1)))
-                    .slice(0, 8);
-                
-                if (topPlaces.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color: #999;">No highly-rated results found. Try a different search.</p>';
-                    return;
-                }
-                
-                // Get details for each place
-                const detailsPromises = topPlaces.map(place => 
-                    fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,rating,user_ratings_total,price_level,photos,reviews,opening_hours,formatted_phone_number,website,geometry&key=${GOOGLE_PLACES_CONFIG.apiKey}`)
-                        .then(r => r.json())
-                        .then(d => d.result)
-                );
-                
-                const details = await Promise.all(detailsPromises);
-                
-                // Render rich results
-                resultsDiv.innerHTML = details.map((place, idx) => {
-                    const photoUrl = place.photos && place.photos[0] 
-                        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${GOOGLE_PLACES_CONFIG.apiKey}`
-                        : null;
-                    
-                    const priceLevel = place.price_level ? '€'.repeat(place.price_level) : '';
-                    const review = place.reviews && place.reviews[0] ? place.reviews[0] : null;
-                    
-                    return `
-                        <div style="background: white; border: 1px solid rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column;">
-                            ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; height: 200px; object-fit: cover;">` : ''}
-                            <div style="padding: 24px;">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                                    <div style="flex: 1;">
-                                        <h4 style="font-family: var(--serif); font-size: 22px; margin-bottom: 6px; line-height: 1.2;">${place.name}</h4>
-                                        <p style="font-size: 13px; color: #888; margin-bottom: 8px;">${place.formatted_address}</p>
-                                        ${priceLevel ? `<p style="font-size: 14px; color: #666;">${priceLevel}</p>` : ''}
-                                    </div>
-                                    <div style="background: var(--olive); color: white; padding: 8px 14px; border-radius: 6px; font-weight: 600; white-space: nowrap;">
-                                        ⭐ ${place.rating}
-                                    </div>
-                                </div>
-                                
-                                <p style="font-size: 13px; color: #666; margin-bottom: 12px;">${place.user_ratings_total || 0} Google reviews</p>
-                                
-                                ${review ? `
-                                    <div style="background: var(--sand); padding: 16px; border-left: 3px solid var(--terracotta); margin-bottom: 16px;">
-                                        <p style="font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 8px;">"${review.text.slice(0, 200)}${review.text.length > 200 ? '...' : ''}"</p>
-                                        <p style="font-size: 12px; color: #888;">— ${review.author_name}, ${review.relative_time_description}</p>
-                                    </div>
-                                ` : ''}
-                                
-                                <div style="display: flex; gap: 8px; margin-top: 16px;">
-                                    <button onclick='addPlaceToActivities(${JSON.stringify({
-                                        name: place.name,
-                                        location: place.formatted_address,
-                                        rating: place.rating,
-                                        reviewCount: place.user_ratings_total,
-                                        priceLevel: priceLevel,
-                                        lat: place.geometry.location.lat,
-                                        lng: place.geometry.location.lng,
-                                        phone: place.formatted_phone_number,
-                                        website: place.website,
-                                        photoUrl: photoUrl
-                                    }).replace(/\"/g, "&quot;")})' 
-                                    style="flex: 1; padding: 12px 20px; background: var(--terracotta); color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer;">
-                                        Add to Activities
-                                    </button>
-                                    ${place.website ? `
-                                        <button onclick='window.open("${place.website}", "_blank")' 
-                                        style="padding: 12px 20px; background: white; border: 1px solid rgba(0,0,0,0.15); font-size: 14px; cursor: pointer;">
-                                            Website
-                                        </button>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-            } catch (error) {
-                console.error('Places API error:', error);
-                resultsDiv.innerHTML = `<p style="color: #C35934;">Search failed. Error: ${error.message}</p>`;
-            }
-        }
-        
-        function addPlaceToActivities(placeData) {
-            // Determine category
-            let category = 'food';
-            
-            // Build rich description
-            let description = `Google Rating: ${placeData.rating}⭐ (${placeData.reviewCount} reviews)`;
-            if (placeData.priceLevel) description += `\nPrice: ${placeData.priceLevel}`;
-            if (placeData.phone) description += `\nPhone: ${placeData.phone}`;
-            
-            const activity = {
-                name: placeData.name,
-                description: description,
-                location: placeData.location,
-                category: category,
-                rating: placeData.rating,
-                reviewCount: placeData.reviewCount,
-                priceLevel: placeData.priceLevel,
-                lat: placeData.lat,
-                lng: placeData.lng,
-                googleMapsUrl: placeData.website || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeData.name)}`,
-                phone: placeData.phone,
-                website: placeData.website,
-                votes: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid,
-                createdByName: currentUser.displayName,
-                source: 'google_places'
-            };
-            
-            db.collection('activities').add(activity)
-                .then(() => {
-                    alert('✅ Added to Activities!');
-                    switchPanel('activities');
-                })
-                .catch(err => alert('Failed to add activity'));
-        }
-        
-        // Load Curated Content
-        function loadCuratedContent() {
-            const content = [
-                {
-                    title: "The Ultimate Guide to Puglia's Best Beaches",
-                    source: "Condé Nast Traveler",
-                    url: "https://www.cntraveler.com/gallery/best-beaches-in-puglia",
-                    description: "From hidden coves to family-friendly shores, discover Puglia's stunning coastline"
-                },
-                {
-                    title: "Where to Eat in Polignano a Mare",
-                    source: "The Guardian",
-                    url: "https://www.theguardian.com/travel/2023/jul/15/best-restaurants-polignano-a-mare-puglia-italy",
-                    description: "The Guardian's pick of the best restaurants in this clifftop town"
-                },
-                {
-                    title: "A Week in Puglia: The Perfect Itinerary",
-                    source: "Lonely Planet",
-                    url: "https://www.lonelyplanet.com/articles/puglia-italy-itinerary",
-                    description: "Expert-recommended route through Puglia's highlights"
-                },
-                {
-                    title: "Alberobello and the Trulli Houses",
-                    source: "UNESCO World Heritage",
-                    url: "https://whc.unesco.org/en/list/787/",
-                    description: "Everything you need to know about these unique cone-shaped buildings"
-                },
-                {
-                    title: "Best Family Activities in Puglia",
-                    source: "Travel + Leisure",
-                    url: "https://www.travelandleisure.com/travel-guide/puglia-italy-family-activities",
-                    description: "Kid-friendly beaches, attractions, and restaurants across the region"
-                },
-                {
-                    title: "Puglia Food Guide: What to Eat",
-                    source: "Serious Eats",
-                    url: "https://www.seriouseats.com/puglia-food-guide",
-                    description: "Orecchiette, burrata, and other Puglian specialties you can't miss"
-                }
-            ];
-            
-            const container = document.getElementById('curatedContent');
-            container.innerHTML = content.map(item => `
-                <div style="background: white; padding: 24px; border: 1px solid rgba(0,0,0,0.08); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 40px rgba(0,0,0,0.12)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
-                    <h4 style="font-family: var(--serif); font-size: 20px; margin-bottom: 8px; line-height: 1.3;">${item.title}</h4>
-                    <p style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">${item.source}</p>
-                    <p style="font-size: 14px; color: #666; margin-bottom: 16px; line-height: 1.6;">${item.description}</p>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="openArticle('${item.url}')" style="flex: 1; padding: 10px; background: var(--charcoal); color: white; border: none; font-size: 13px; cursor: pointer;">Read Article</button>
-                        <button onclick="saveToInspiration('${item.url}', '${item.title.replace(/'/g, "\\'")}', '${item.description.replace(/'/g, "\\'")}', '${item.source}')" style="flex: 1; padding: 10px; background: white; border: 1px solid rgba(0,0,0,0.15); font-size: 13px; cursor: pointer;">Save to Board</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function openArticle(url) {
-            window.open(url, '_blank');
-        }
-        
-        function saveToInspiration(url, title, description, source) {
-            const inspiration = {
-                url: url,
-                title: title,
-                description: description,
-                source: source,
-                votes: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: currentUser.uid
-            };
-            
-            db.collection('inspiration').add(inspiration)
-                .then(() => {
-                    alert('✅ Saved to Inspiration Board!');
-                    switchPanel('inspiration');
-                })
-                .catch(err => alert('Failed to save'));
-        }
-
-        // Map
-        function initMap() {
-            // Initialize Google Map centered on Puglia
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 40.7816, lng: 17.2368 },
-                zoom: 9,
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    }
-                ]
-            });
-            
-            // Add markers for all activities with coordinates
-            updateMapMarkers();
-        }
-        
-        function updateMapMarkers() {
-            if (!map) return;
-            
-            // Clear existing markers
-            if (window.activityMarkers) {
-                window.activityMarkers.forEach(m => m.setMap(null));
-            }
-            window.activityMarkers = [];
-            
-            // Add marker for each activity
-            activities.forEach(activity => {
-                if (activity.lat && activity.lng) {
-                    const marker = new google.maps.Marker({
-                        position: { lat: activity.lat, lng: activity.lng },
-                        map: map,
-                        title: activity.name,
-                        animation: google.maps.Animation.DROP
-                    });
-                    
-                    // Info window with activity details
-                    const infoContent = `
-                        <div style="font-family: var(--sans); max-width: 250px;">
-                            <h3 style="font-family: var(--serif); font-size: 18px; margin-bottom: 8px;">${activity.name}</h3>
-                            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">${activity.location || ''}</p>
-                            ${activity.rating ? `<p style="font-size: 14px; margin-bottom: 8px;">⭐ ${activity.rating}</p>` : ''}
-                            <p style="font-size: 13px; color: #555; margin-bottom: 12px;">${activity.description?.slice(0, 100) || ''}...</p>
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="switchPanel('activities')" style="flex: 1; padding: 8px; background: var(--terracotta); color: white; border: none; font-size: 12px; cursor: pointer;">View Details</button>
-                                <button onclick="addToItinerary('${activity.id}')" style="flex: 1; padding: 8px; background: white; border: 1px solid #ddd; font-size: 12px; cursor: pointer;">Add to Itinerary</button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: infoContent
-                    });
-                    
-                    marker.addListener('click', () => {
-                        infoWindow.open(map, marker);
-                    });
-                    
-                    window.activityMarkers.push(marker);
-                }
-            });
-        }
-        
-        function addToItinerary(activityId) {
-            // Placeholder for itinerary functionality
-            alert('📅 Itinerary builder coming soon! For now, just note which activities you want to do.');
-        }
-        
-        function showOnMap(activityId) {
-            const activity = activities.find(a => a.id === activityId);
-            if (!activity || !activity.lat || !activity.lng) return;
-            
-            // Switch to map panel
-            switchPanel('map');
-            
-            // Wait for map to be initialized
-            setTimeout(() => {
-                if (!map) initMap();
-                
-                // Center map on activity
-                map.setCenter({ lat: activity.lat, lng: activity.lng });
-                map.setZoom(15);
-                
-                // Find and trigger the marker's info window
-                if (window.activityMarkers) {
-                    const marker = window.activityMarkers.find((m, idx) => {
-                        const act = activities.filter(a => a.lat && a.lng)[idx];
-                        return act && act.id === activityId;
-                    });
-                    
-                    if (marker) {
-                        google.maps.event.trigger(marker, 'click');
-                    }
-                }
-            }, 300);
-        }
-
-        // Chat Functions
-        function toggleChat() {
-            const panel = document.getElementById('chatPanel');
-            panel.classList.toggle('active');
-        }
-        
-        async function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message) return;
-            
-            // Add user message to chat
-            addMessageToChat(message, 'user');
-            input.value = '';
-            
-            // Check if Gemini is configured
-            if (!GEMINI_CONFIG.enabled || !GEMINI_CONFIG.apiKey) {
-                addMessageToChat(
-                    "⚠️ Gemini AI not configured yet. To enable the travel assistant, get a free API key from https://ai.google.dev and add it to the config (lines 1078-1081).",
-                    'assistant'
-                );
-                return;
-            }
-            
-            // Show typing indicator
-            const typingId = addMessageToChat('Thinking...', 'assistant');
-            
-            try {
-                // Build context from your activities
-                const context = `You are a helpful travel assistant for a family trip to Puglia, Italy in August 2025.
-                
-The group has planned ${activities.length} activities so far.
-Top voted activities: ${activities.sort((a,b) => (b.votes || 0) - (a.votes || 0)).slice(0,5).map(a => a.name).join(', ')}
-
-Answer questions about:
-- Best things to do in specific areas
-- Restaurant recommendations  
-- Family-friendly activities
-- Timing and logistics
-- Booking requirements
-- Local tips and insider knowledge
-
-Keep responses concise (2-3 paragraphs), friendly, and actionable.`;
-
-                const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_CONFIG.apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [{
-                                    text: `${context}\n\nUser question: ${message}`
-                                }]
-                            }]
-                        })
-                    }
-                );
-                
-                const data = await response.json();
-                
-                // Remove typing indicator
-                document.getElementById(typingId).remove();
-                
-                if (data.candidates && data.candidates[0].content) {
-                    const reply = data.candidates[0].content.parts[0].text;
-                    addMessageToChat(reply, 'assistant');
-                } else {
-                    addMessageToChat('Sorry, I couldn\'t generate a response. Please try again.', 'assistant');
-                }
-                
-            } catch (error) {
-                console.error('Gemini error:', error);
-                document.getElementById(typingId).remove();
-                addMessageToChat('Error connecting to AI. Check console for details.', 'assistant');
-            }
-        }
-        
-        function addMessageToChat(text, sender) {
-            const messages = document.getElementById('chatMessages');
-            const messageId = 'msg-' + Date.now();
-            const div = document.createElement('div');
-            div.id = messageId;
-            div.className = `chat-message ${sender}`;
-            div.innerHTML = `<p>${text}</p>`;
-            messages.appendChild(div);
-            messages.scrollTop = messages.scrollHeight;
-            return messageId;
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            initFirebase();
         });
-    </script>
+    }, () => {});
+}
+
+async function setPayment(type, status, btn) {
+    await db.collection('paymentStatus').doc(type).set({
+        status, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: user.uid
+    });
+    document.getElementById('pay-' + type).querySelectorAll('.pay-btn').forEach(b => b.className = 'pay-btn');
+    btn.classList.add('active-' + status);
+}
+
+// ═══════════════════════════════════════════
+// DISCOVER — GOOGLE PLACES (JavaScript SDK)
+// ═══════════════════════════════════════════
+const COORDS = {
+    'polignano a mare': {lat:40.9964,lng:17.2198},
+    'polignano':        {lat:40.9964,lng:17.2198},
+    'ostuni':           {lat:40.7316,lng:17.5797},
+    'alberobello':      {lat:40.7816,lng:17.2368},
+    'lecce':            {lat:40.3515,lng:18.1750},
+    'bari':             {lat:41.1171,lng:16.8719},
+    'monopoli':         {lat:40.9538,lng:17.3082},
+    'locorotondo':      {lat:40.7548,lng:17.3277},
+    'fasano':           {lat:40.8305,lng:17.3617},
+    'matera':           {lat:40.6664,lng:16.6043}
+};
+
+function quickSearch(type, loc) {
+    document.getElementById('searchLoc').value = loc;
+    document.getElementById('searchType').value = type;
+    showPanel('discover', document.querySelector('.nav-item:nth-child(2)'));
+    doSearch();
+}
+
+async function doSearch() {
+    const loc  = document.getElementById('searchLoc').value.trim();
+    const type = document.getElementById('searchType').value;
+    const out  = document.getElementById('search-results');
+
+    if (!loc) { out.innerHTML = '<p class="search-hint" style="margin-top:0">Please enter a location above</p>'; return; }
+
+    if (!googleReady) {
+        out.innerHTML = '<p class="loading-msg">Google Maps is loading, please try again in a moment...</p>';
+        setTimeout(doSearch, 1200);
+        return;
+    }
+
+    out.innerHTML = '<p class="loading-msg">Searching Google Places for top-rated spots...</p>';
+
+    try {
+        // Resolve coordinates
+        let latLng;
+        const key = loc.toLowerCase().trim();
+        if (COORDS[key]) {
+            latLng = new google.maps.LatLng(COORDS[key].lat, COORDS[key].lng);
+        } else {
+            latLng = await new Promise((res, rej) =>
+                geocoder.geocode({ address: loc + ', Italy' }, (results, status) =>
+                    status === 'OK' ? res(results[0].geometry.location) : rej('Location not found — try: Polignano a Mare, Ostuni, Lecce')
+                )
+            );
+        }
+
+        // PlacesService needs a map or a div
+        const tempDiv = document.createElement('div');
+        const svc = new google.maps.places.PlacesService(tempDiv);
+
+        // Nearby search
+        const results = await new Promise((res, rej) =>
+            svc.nearbySearch({ location: latLng, radius: 3000, type }, (r, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) res(r);
+                else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) res([]);
+                else rej('Google Places error: ' + status);
+            })
+        );
+
+        const top = results
+            .filter(p => (p.rating || 0) >= 4.0)
+            .sort((a,b) => (b.rating*(b.user_ratings_total||1)) - (a.rating*(a.user_ratings_total||1)))
+            .slice(0,8);
+
+        if (!top.length) {
+            out.innerHTML = '<p class="loading-msg">No highly-rated results found. Try a different location or type.</p>';
+            return;
+        }
+
+        // Get full details for each
+        const details = await Promise.all(top.map(p =>
+            new Promise(res =>
+                svc.getDetails(
+                    { placeId: p.place_id, fields: ['name','formatted_address','rating','user_ratings_total','price_level','photos','reviews','formatted_phone_number','website','geometry'] },
+                    (r, status) => res(status === google.maps.places.PlacesServiceStatus.OK ? r : null)
+                )
+            )
+        ));
+
+        out.innerHTML = details.filter(Boolean).map(p => {
+            const photo  = p.photos?.[0]?.getUrl({ maxWidth: 800 }) || '';
+            const price  = p.price_level ? '€'.repeat(p.price_level) : '';
+            const review = p.reviews?.[0];
+            const lat    = p.geometry?.location?.lat() || null;
+            const lng    = p.geometry?.location?.lng() || null;
+
+            // Safely encode for onclick
+            const safeData = JSON.stringify({
+                name: p.name||'',
+                addr: p.formatted_address||'',
+                rating: p.rating||0,
+                reviews: p.user_ratings_total||0,
+                price,
+                lat, lng,
+                phone: p.formatted_phone_number||'',
+                website: p.website||''
+            });
+
+            return `
+            <div class="place-card">
+                ${photo ? `<img class="place-photo" src="${photo}" alt="${x(p.name)}">` : ''}
+                <div class="place-body">
+                    <div class="place-header">
+                        <div>
+                            <div class="place-name">${x(p.name)}</div>
+                            <div class="place-addr">${x(p.formatted_address||'')}</div>
+                            ${price ? `<div style="font-size:14px;color:#666;margin-top:4px">${price}</div>` : ''}
+                        </div>
+                        <div class="rating-badge">⭐ ${p.rating}</div>
+                    </div>
+                    <p style="font-size:13px;color:#888;margin-bottom:12px">${p.user_ratings_total||0} Google reviews</p>
+                    ${review ? `<div class="review-snippet">"${x(review.text.slice(0,240))}${review.text.length>240?'...':''}"<div class="review-author">— ${x(review.author_name)}, ${review.relative_time_description}</div></div>` : ''}
+                    <div class="place-btns">
+                        <button class="place-add-btn" onclick='addFromGoogle(${safeData.replace(/'/g,"&#39;")})'>+ Add to Activities</button>
+                        ${p.website ? `<button class="place-web-btn" onclick="window.open(this.dataset.url,'_blank')" data-url="${x(p.website)}">Website</button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+    } catch(err) {
+        console.error(err);
+        out.innerHTML = `
+            <div class="error-box">
+                <strong>Search failed:</strong> ${x(String(err))}<br><br>
+                Please make sure these APIs are enabled in Google Cloud Console:<br>
+                • Maps JavaScript API &nbsp;• Places API &nbsp;• Geocoding API
+            </div>`;
+    }
+}
+
+async function addFromGoogle(data) {
+    await db.collection('activities').add({
+        name: data.name,
+        description: `Google Rating: ${data.rating}⭐ (${data.reviews} reviews)${data.price ? '\nPrice: '+data.price : ''}${data.phone ? '\nPhone: '+data.phone : ''}`,
+        location: data.addr,
+        category: 'food',
+        rating: data.rating,
+        priceLevel: data.price,
+        lat: data.lat,
+        lng: data.lng,
+        website: data.website,
+        votes: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: user.uid,
+        createdByName: user.displayName
+    });
+    alert(`✅ "${data.name}" added to Activities!`);
+    showPanel('activities', document.querySelector('.nav-item:nth-child(3)'));
+}
+
+// ═══════════════════════════════════════════
+// CURATED ARTICLES
+// ═══════════════════════════════════════════
+const ARTICLES = [
+    { title:"Best Beaches in Puglia",           source:"Condé Nast Traveler",  url:"https://www.cntraveler.com/gallery/best-beaches-in-puglia",         desc:"From hidden coves to family-friendly shores" },
+    { title:"Where to Eat in Polignano a Mare", source:"The Guardian",          url:"https://www.theguardian.com/travel/puglia",                          desc:"Top restaurant picks in this beautiful clifftop town" },
+    { title:"A Week in Puglia: The Itinerary",  source:"Lonely Planet",         url:"https://www.lonelyplanet.com/italy/puglia",                          desc:"Expert-recommended route through Puglia's highlights" },
+    { title:"The Trulli of Alberobello",        source:"UNESCO",                url:"https://whc.unesco.org/en/list/787/",                                desc:"Everything about these iconic World Heritage buildings" },
+    { title:"Puglia Family Travel Guide",        source:"Travel + Leisure",      url:"https://www.travelandleisure.com/italy/puglia",                      desc:"Kid-friendly beaches, activities and restaurants" },
+    { title:"What to Eat in Puglia",            source:"Serious Eats",           url:"https://www.seriouseats.com",                                        desc:"Orecchiette, burrata and all the specialties to try" }
+];
+
+function renderCurated() {
+    document.getElementById('curated-grid').innerHTML = ARTICLES.map((a,i) => `
+        <div class="article-card">
+            <div class="article-title">${a.title}</div>
+            <div class="article-source">${a.source}</div>
+            <p class="article-desc">${a.desc}</p>
+            <div class="article-btns">
+                <button class="article-read" onclick="window.open('${a.url}','_blank')">Read Article</button>
+                <button class="article-save" onclick="saveArticle(${i})">Save to Board</button>
+            </div>
+        </div>`).join('');
+}
+
+async function saveArticle(i) {
+    const a = ARTICLES[i];
+    await db.collection('inspiration').add({
+        url: a.url, title: a.title, description: a.desc, source: a.source,
+        votes: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: user.uid
+    });
+    alert('✅ Saved to Inspiration Board!');
+    showPanel('inspiration', document.querySelector('.nav-item:nth-child(4)'));
+}
+
+// ═══════════════════════════════════════════
+// GOOGLE MAP
+// ═══════════════════════════════════════════
+function initMap() {
+    if (!googleReady) {
+        document.getElementById('map').innerHTML = '<p class="loading-msg">Loading Google Maps...</p>';
+        setTimeout(initMap, 800); return;
+    }
+    if (gmap) { refreshMarkers(); return; }
+    gmap = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 40.7816, lng: 17.2368 },
+        zoom: 9,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true
+    });
+    placesService = new google.maps.places.PlacesService(gmap);
+    refreshMarkers();
+}
+
+function refreshMarkers() {
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    if (activeInfo) { activeInfo.close(); activeInfo = null; }
+
+    activities.filter(a => a.lat && a.lng).forEach(a => {
+        const m = new google.maps.Marker({
+            position: { lat: a.lat, lng: a.lng },
+            map: gmap, title: a.name,
+            animation: google.maps.Animation.DROP
+        });
+        const info = new google.maps.InfoWindow({
+            content: `
+            <div style="font-family:'Work Sans',sans-serif;max-width:220px;padding:4px">
+                <strong style="font-family:'Crimson Pro',serif;font-size:16px">${x(a.name)}</strong><br>
+                <span style="font-size:12px;color:#888">${x(a.location||'')}</span><br>
+                ${a.rating ? `<span style="font-size:13px">⭐ ${a.rating}</span><br>` : ''}
+                ${a.description ? `<span style="font-size:13px;color:#555">${x(a.description.slice(0,80))}...</span>` : ''}
+            </div>`
+        });
+        m.addListener('click', () => {
+            if (activeInfo) activeInfo.close();
+            info.open(gmap, m);
+            activeInfo = info;
+        });
+        markers.push(m);
+    });
+}
+
+function jumpToMap(actId) {
+    const a = activities.find(z => z.id === actId);
+    if (!a?.lat) { alert('No location data for this activity yet'); return; }
+    showPanel('map', document.querySelector('.nav-item:nth-child(5)'));
+    setTimeout(() => {
+        if (!gmap) { initMap(); setTimeout(() => jumpToMap(actId), 900); return; }
+        gmap.setCenter({ lat: a.lat, lng: a.lng });
+        gmap.setZoom(15);
+        const i = activities.filter(z => z.lat && z.lng).findIndex(z => z.id === actId);
+        if (i >= 0 && markers[i]) google.maps.event.trigger(markers[i], 'click');
+    }, 200);
+}
+
+// ═══════════════════════════════════════════
+// GEMINI CHAT
+// ═══════════════════════════════════════════
+function toggleChat() {
+    document.getElementById('chatPanel').classList.toggle('open');
+}
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    addChatBubble(msg, 'user');
+    const tid = addChatBubble('Thinking...', 'ai');
+
+    const ctx = `You are a helpful travel assistant for a family trip to Puglia, Italy in August 2025.
+Group has ${activities.length} planned activities. Most popular: ${activities.sort((a,b)=>(b.votes||0)-(a.votes||0)).slice(0,5).map(a=>a.name).join(', ')}.
+Be concise (2-3 paragraphs), friendly and practical. Focus on Puglia food, beaches, culture and family activities.`;
+
+    try {
+        const res  = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: ctx + '\n\nUser: ' + msg }] }] })
+        });
+        const data = await res.json();
+        document.getElementById(tid)?.remove();
+        addChatBubble(data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I couldn\'t get a response.', 'ai');
+    } catch(e) {
+        document.getElementById(tid)?.remove();
+        addChatBubble('Connection error — please try again.', 'ai');
+    }
+}
+
+function addChatBubble(text, role) {
+    const id   = 'cm-' + Date.now() + Math.random();
+    const msgs = document.getElementById('chatMsgs');
+    const div  = document.createElement('div');
+    div.id = id;
+    div.className = 'chat-msg ' + (role === 'user' ? 'user' : 'ai');
+    div.innerHTML = `<div class="chat-bubble">${x(text).replace(/\n/g,'<br>')}</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return id;
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function x(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtKey(k) {
+    return k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ═══════════════════════════════════════════
+// LOAD GOOGLE MAPS SDK
+// ═══════════════════════════════════════════
+(function loadMaps() {
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_KEY}&libraries=places&callback=googleMapsLoaded`;
+    s.async = true;
+    s.defer = true;
+    s.onerror = () => console.error('Failed to load Google Maps SDK');
+    document.head.appendChild(s);
+})();
+</script>
 </body>
 </html>
